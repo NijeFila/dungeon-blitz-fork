@@ -2,9 +2,9 @@ node_modules
 server_tapes
 src/server/dist
 src/server/Accounts.json
-src/server/data/Accounts.json
 src/server/saves/
-src/server/data/saves/
+src/server/data/saves/*
+!src/server/data/saves/9.json
 temp
 .DS_Store
 build/

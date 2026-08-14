@@ -1,0 +1,85 @@
+[
+  {
+    "email": "a@gmail.com",
+    "user_id": 1
+  },
+  {
+    "email": "test@example.com",
+    "user_id": 2
+  },
+  {
+    "email": "neo@gmail.com",
+    "user_id": 3
+  },
+  {
+    "email": "2@gmail.com",
+    "user_id": 4,
+    "passwordKdf": "scrypt",
+    "passwordSalt": "3n+yvbspQgkllP6qVNpaMw==",
+    "passwordHash": "U8hrCPiA7/TyS0vAc6rrweysuB5U8U4SUga72P7L8EAMAm1/bqjbr8ESa1MPECefcdD1jcTkmx1LdDVgv7O8Fg==",
+    "passwordParams": {
+      "N": 16384,
+      "r": 8,
+      "p": 1,
+      "keylen": 64
+    }
+  },
+  {
+    "email": "cheeto@gmail.com",
+    "user_id": 5
+  },
+  {
+    "email": "test123@gmail.com",
+    "user_id": 6
+  },
+  {
+    "email": "yigitkorkmaz408@gmail.com",
+    "user_id": 7
+  },
+  {
+    "email": "eneselcin90@gmail.com",
+    "user_id": 8
+  },
+  {
+    "email": "1@gmail.com",
+    "user_id": 9,
+    "passwordKdf": "scrypt",
+    "passwordSalt": "mE3vTEagIXw//NdnIOdlXQ==",
+    "passwordHash": "+HvRSZjUxHWD07WSWm268svWYbrrTTCaALfQzqRMPKrG6xxDtRog+rbyoATpJ6KU/rKrfJn/it30MeGsot+6Lg==",
+    "passwordParams": {
+      "N": 16384,
+      "r": 8,
+      "p": 1,
+      "keylen": 64
+    }
+  },
+  {
+    "email": "tela@gmail.com",
+    "user_id": 10
+  },
+  {
+    "email": "ekmek@gg.com",
+    "user_id": 11
+  },
+  {
+    "email": "feeronfaker376@gmail.com",
+    "user_id": 12
+  },
+  {
+    "email": "urmom@gmail.com",
+    "user_id": 13
+  },
+  {
+    "email": "test@theminesa.studio",
+    "user_id": 14,
+    "passwordKdf": "scrypt",
+    "passwordSalt": "Q79BwAHfEZZhlwfAYTNQbA==",
+    "passwordHash": "7uD3Gjwhz4bwG5tbOB7ivbGKqCHGTm4Ye/7ax2x//s9xby6JnBwD+L2UG5bKowi5FpSxetun1wowLMSorCO1mw==",
+    "passwordParams": {
+      "N": 16384,
+      "r": 8,
+      "p": 1,
+      "keylen": 64
+    }
+  }
+]

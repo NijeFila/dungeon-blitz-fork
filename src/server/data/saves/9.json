@@ -1,0 +1,2990 @@
+{
+  "user_id": 9,
+  "characters": [
+    {
+      "name": "RendzerA",
+      "class": "Paladin",
+      "level": 24,
+      "xp": 346568,
+      "gold": 150866,
+      "craftXP": 4858,
+      "DragonOre": 0,
+      "mammothIdols": 8089,
+      "DragonKeys": 0,
+      "SilverSigils": 1654,
+      "alertState": 15,
+      "gender": "",
+      "headSet": "Short",
+      "hairSet": "Do12",
+      "mouthSet": "M06",
+      "faceSet": "F01",
+      "hairColor": 2434341,
+      "skinColor": 13403493,
+      "shirtColor": 197379,
+      "pantColor": 197379,
+      "equippedGears": [
+        {
+          "gearID": 98,
+          "tier": 0,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 643,
+          "tier": 0,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 456,
+          "tier": 0,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 737,
+          "tier": 1,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1177,
+          "tier": 2,
+          "runes": [
+            20505,
+            19481,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 16,
+          "tier": 1,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "CurrentLevel": {
+        "name": "Castle",
+        "x": 15403,
+        "y": 738
+      },
+      "PreviousLevel": {
+        "name": "CraftTown",
+        "x": -391,
+        "y": 1642
+      },
+      "inventoryGears": [
+        {
+          "gearID": 1,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 13,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 5,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 11,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 14,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 4,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 9,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 16,
+          "tier": 1,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 106,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 98,
+          "tier": 0,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 21,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 90,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 101,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 182,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 190,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 198,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 197,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 195,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 447,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 448,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 451,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 459,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 275,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 260,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 288,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 287,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 266,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 355,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 368,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 371,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 370,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 453,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 456,
+          "tier": 0,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 450,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 623,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 639,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 636,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 644,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 721,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 735,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 725,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 622,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 643,
+          "tier": 0,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 733,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 635,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 730,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 722,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 736,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 738,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 737,
+          "tier": 1,
+          "runes": [
+            25,
+            25,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 720,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 533,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 548,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 552,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 546,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 542,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 531,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 544,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1177,
+          "tier": 2,
+          "runes": [
+            20505,
+            19481,
+            25
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 543,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 729,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 713,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 827,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 823,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 803,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 819,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 812,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 824,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 806,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 809,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 828,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 802,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 817,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "gearSets": [],
+      "mounts": [
+        1,
+        107
+      ],
+      "pets": [
+        {
+          "typeID": 27,
+          "special_id": 1,
+          "level": 10,
+          "xp": 183217
+        },
+        {
+          "typeID": 30,
+          "special_id": 2,
+          "level": 1,
+          "xp": 0
+        },
+        {
+          "typeID": 22,
+          "special_id": 3,
+          "level": 10,
+          "xp": 0
+        },
+        {
+          "typeID": 48,
+          "special_id": 4,
+          "level": 1,
+          "xp": 0
+        },
+        {
+          "typeID": 18,
+          "special_id": 5,
+          "level": 1,
+          "xp": 0
+        },
+        {
+          "typeID": 42,
+          "special_id": 6,
+          "level": 1,
+          "xp": 0
+        },
+        {
+          "typeID": 8,
+          "special_id": 7,
+          "level": 10,
+          "xp": 160504
+        },
+        {
+          "typeID": 2,
+          "special_id": 8,
+          "level": 10,
+          "xp": 0
+        },
+        {
+          "typeID": 24,
+          "special_id": 9,
+          "level": 1,
+          "xp": 0
+        },
+        {
+          "typeID": 23,
+          "special_id": 10,
+          "level": 1,
+          "xp": 0
+        },
+        {
+          "typeID": 20,
+          "special_id": 11,
+          "level": 10,
+          "xp": 0
+        },
+        {
+          "typeID": 52,
+          "special_id": 12,
+          "level": 10,
+          "xp": 0
+        },
+        {
+          "typeID": 38,
+          "special_id": 13,
+          "level": 10,
+          "xp": 0
+        },
+        {
+          "typeID": 5,
+          "special_id": 14,
+          "level": 10,
+          "xp": 0
+        },
+        {
+          "typeID": 50,
+          "special_id": 15,
+          "level": 1,
+          "xp": 0
+        }
+      ],
+      "charms": [
+        {
+          "charmID": 93,
+          "count": 3
+        },
+        {
+          "charmID": 94,
+          "count": 5
+        },
+        {
+          "charmID": 95,
+          "count": 3
+        },
+        {
+          "charmID": 25,
+          "count": 10
+        }
+      ],
+      "materials": [
+        {
+          "materialID": 91,
+          "count": 38
+        },
+        {
+          "materialID": 93,
+          "count": 2
+        },
+        {
+          "materialID": 35,
+          "count": 8
+        },
+        {
+          "materialID": 107,
+          "count": 5
+        },
+        {
+          "materialID": 112,
+          "count": 31
+        },
+        {
+          "materialID": 106,
+          "count": 17
+        },
+        {
+          "materialID": 113,
+          "count": 5
+        },
+        {
+          "materialID": 103,
+          "count": 5
+        },
+        {
+          "materialID": 79,
+          "count": 18
+        },
+        {
+          "materialID": 34,
+          "count": 16
+        },
+        {
+          "materialID": 7,
+          "count": 28
+        },
+        {
+          "materialID": 8,
+          "count": 9
+        },
+        {
+          "materialID": 92,
+          "count": 4
+        },
+        {
+          "materialID": 70,
+          "count": 19
+        },
+        {
+          "materialID": 71,
+          "count": 5
+        },
+        {
+          "materialID": 2,
+          "count": 1
+        },
+        {
+          "materialID": 80,
+          "count": 4
+        },
+        {
+          "materialID": 82,
+          "count": 3
+        },
+        {
+          "materialID": 13,
+          "count": 4
+        },
+        {
+          "materialID": 9,
+          "count": 1
+        },
+        {
+          "materialID": 1,
+          "count": 8
+        },
+        {
+          "materialID": 72,
+          "count": 1
+        },
+        {
+          "materialID": 36,
+          "count": 1
+        },
+        {
+          "materialID": 81,
+          "count": 3
+        },
+        {
+          "materialID": 95,
+          "count": 3
+        },
+        {
+          "materialID": 32,
+          "count": 1
+        },
+        {
+          "materialID": 52,
+          "count": 7
+        },
+        {
+          "materialID": 4,
+          "count": 4
+        },
+        {
+          "materialID": 94,
+          "count": 12
+        },
+        {
+          "materialID": 28,
+          "count": 3
+        },
+        {
+          "materialID": 49,
+          "count": 3
+        },
+        {
+          "materialID": 64,
+          "count": 21
+        },
+        {
+          "materialID": 65,
+          "count": 3
+        },
+        {
+          "materialID": 66,
+          "count": 1
+        },
+        {
+          "materialID": 40,
+          "count": 1
+        },
+        {
+          "materialID": 110,
+          "count": 1
+        },
+        {
+          "materialID": 109,
+          "count": 8
+        },
+        {
+          "materialID": 114,
+          "count": 1
+        },
+        {
+          "materialID": 118,
+          "count": 5
+        },
+        {
+          "materialID": 3,
+          "count": 1
+        },
+        {
+          "materialID": 111,
+          "count": 1
+        },
+        {
+          "materialID": 31,
+          "count": 2
+        },
+        {
+          "materialID": 37,
+          "count": 34
+        },
+        {
+          "materialID": 16,
+          "count": 5
+        },
+        {
+          "materialID": 6,
+          "count": 1
+        },
+        {
+          "materialID": 17,
+          "count": 2
+        },
+        {
+          "materialID": 67,
+          "count": 3
+        },
+        {
+          "materialID": 38,
+          "count": 7
+        },
+        {
+          "materialID": 85,
+          "count": 7
+        },
+        {
+          "materialID": 58,
+          "count": 17
+        },
+        {
+          "materialID": 68,
+          "count": 2
+        },
+        {
+          "materialID": 86,
+          "count": 1
+        },
+        {
+          "materialID": 88,
+          "count": 1
+        },
+        {
+          "materialID": 90,
+          "count": 1
+        },
+        {
+          "materialID": 89,
+          "count": 1
+        },
+        {
+          "materialID": 73,
+          "count": 11
+        },
+        {
+          "materialID": 74,
+          "count": 2
+        },
+        {
+          "materialID": 43,
+          "count": 4
+        },
+        {
+          "materialID": 10,
+          "count": 8
+        },
+        {
+          "materialID": 62,
+          "count": 1
+        },
+        {
+          "materialID": 5,
+          "count": 1
+        },
+        {
+          "materialID": 29,
+          "count": 1
+        },
+        {
+          "materialID": 120,
+          "count": 1
+        },
+        {
+          "materialID": 11,
+          "count": 1
+        },
+        {
+          "materialID": 30,
+          "count": 1
+        },
+        {
+          "materialID": 45,
+          "count": 1
+        },
+        {
+          "materialID": 25,
+          "count": 6
+        },
+        {
+          "materialID": 26,
+          "count": 2
+        },
+        {
+          "materialID": 117,
+          "count": 1
+        },
+        {
+          "materialID": 115,
+          "count": 18
+        },
+        {
+          "materialID": 116,
+          "count": 5
+        },
+        {
+          "materialID": 104,
+          "count": 1
+        },
+        {
+          "materialID": 108,
+          "count": 1
+        }
+      ],
+      "lockboxes": [
+        {
+          "lockboxID": 1,
+          "count": 50
+        }
+      ],
+      "OwnedDyes": [
+        13,
+        16,
+        30,
+        33,
+        47,
+        93,
+        104,
+        110,
+        118,
+        135,
+        140,
+        170,
+        175,
+        180,
+        187,
+        208,
+        215,
+        243,
+        246,
+        248
+      ],
+      "consumables": [
+        {
+          "consumableID": 11,
+          "count": 4
+        },
+        {
+          "consumableID": 1,
+          "count": 7
+        },
+        {
+          "consumableID": 10,
+          "count": 5
+        },
+        {
+          "consumableID": 4,
+          "count": 4
+        },
+        {
+          "consumableID": 3,
+          "count": 3
+        }
+      ],
+      "missions": {
+        "1": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 6,
+          "highscore": 131450,
+          "Time": 1786495857,
+          "claimed": 1,
+          "complete": 1
+        },
+        "2": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "3": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 220000,
+          "Time": 1786496245,
+          "claimed": 1,
+          "complete": 1
+        },
+        "4": {
+          "state": 3,
+          "currCount": 0,
+          "claimed": 1,
+          "complete": 1
+        },
+        "5": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 5,
+          "highscore": 172598,
+          "Time": 1786496349,
+          "claimed": 1,
+          "complete": 1
+        },
+        "6": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 9,
+          "highscore": 389139,
+          "Time": 1786536890,
+          "claimed": 1,
+          "complete": 1
+        },
+        "7": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 550000,
+          "Time": 1786498237,
+          "claimed": 1,
+          "complete": 1
+        },
+        "8": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "9": {
+          "state": 3,
+          "currCount": 5,
+          "claimed": 1,
+          "complete": 1
+        },
+        "10": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "12": {
+          "state": 3,
+          "currCount": 30,
+          "claimed": 1,
+          "complete": 1
+        },
+        "13": {
+          "state": 3,
+          "currCount": 1,
+          "claimed": 1,
+          "complete": 1
+        },
+        "14": {
+          "state": 3,
+          "currCount": 1,
+          "claimed": 1,
+          "complete": 1
+        },
+        "15": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 652809,
+          "Time": 1786535649,
+          "claimed": 1,
+          "complete": 1
+        },
+        "16": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 762769,
+          "Time": 1786540931,
+          "claimed": 1,
+          "complete": 1
+        },
+        "17": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "18": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 871400,
+          "Time": 1786541450,
+          "claimed": 1,
+          "complete": 1
+        },
+        "19": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 980096,
+          "Time": 1786541910,
+          "claimed": 1,
+          "complete": 1
+        },
+        "20": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 870768,
+          "Time": 1786537788,
+          "claimed": 1,
+          "complete": 1
+        },
+        "21": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "22": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 981162,
+          "Time": 1786542948,
+          "claimed": 1,
+          "complete": 1
+        },
+        "23": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1087760,
+          "Time": 1786544119,
+          "claimed": 1,
+          "complete": 1
+        },
+        "24": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 870319,
+          "Time": 1786543447,
+          "claimed": 1,
+          "complete": 1
+        },
+        "25": {
+          "state": 3,
+          "currCount": 5,
+          "claimed": 1,
+          "complete": 1
+        },
+        "26": {
+          "state": 3,
+          "currCount": 1,
+          "claimed": 1,
+          "complete": 1
+        },
+        "27": {
+          "state": 3,
+          "currCount": 1,
+          "claimed": 1,
+          "complete": 1
+        },
+        "28": {
+          "state": 3,
+          "currCount": 1,
+          "claimed": 1,
+          "complete": 1
+        },
+        "29": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "30": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "31": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "32": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "33": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1198336,
+          "Time": 1786544779,
+          "claimed": 1,
+          "complete": 1
+        },
+        "34": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 8,
+          "highscore": 821153,
+          "Time": 1786545270,
+          "claimed": 1,
+          "complete": 1
+        },
+        "35": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "36": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "37": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 5,
+          "highscore": 748751,
+          "Time": 1786558599,
+          "claimed": 1,
+          "complete": 1
+        },
+        "38": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1627588,
+          "Time": 1786559203,
+          "claimed": 1,
+          "complete": 1
+        },
+        "39": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "40": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 5,
+          "highscore": 612318,
+          "Time": 1786547045,
+          "claimed": 1,
+          "complete": 1
+        },
+        "41": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 8,
+          "highscore": 822299,
+          "Time": 1786547458,
+          "claimed": 1,
+          "complete": 1
+        },
+        "42": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1407227,
+          "Time": 1786553308,
+          "claimed": 1,
+          "complete": 1
+        },
+        "43": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1514716,
+          "Time": 1786554119,
+          "claimed": 1,
+          "complete": 1
+        },
+        "44": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1621884,
+          "Time": 1786555824,
+          "claimed": 1,
+          "complete": 1
+        },
+        "45": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "46": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1164786,
+          "Time": 1786546006,
+          "claimed": 1,
+          "complete": 1
+        },
+        "47": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1300207,
+          "Time": 1786552721,
+          "claimed": 1,
+          "complete": 1
+        },
+        "48": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1625500,
+          "Time": 1786556279,
+          "claimed": 1,
+          "complete": 1
+        },
+        "49": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "50": {
+          "state": 3,
+          "currCount": 15,
+          "claimed": 1,
+          "complete": 1
+        },
+        "51": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1198210,
+          "Time": 1786557754,
+          "claimed": 1,
+          "complete": 1
+        },
+        "52": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1193585,
+          "Time": 1786557930,
+          "claimed": 1,
+          "complete": 1
+        },
+        "53": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1306095,
+          "Time": 1786557597,
+          "claimed": 1,
+          "complete": 1
+        },
+        "54": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1304691,
+          "Time": 1786557444,
+          "claimed": 1,
+          "complete": 1
+        },
+        "55": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1412652,
+          "Time": 1786556500,
+          "claimed": 1,
+          "complete": 1
+        },
+        "56": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1413980,
+          "Time": 1786557221,
+          "claimed": 1,
+          "complete": 1
+        },
+        "57": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1520449,
+          "Time": 1786556942,
+          "claimed": 1,
+          "complete": 1
+        },
+        "58": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 100000,
+          "Time": 1786556840,
+          "claimed": 1,
+          "complete": 1
+        },
+        "59": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1629396,
+          "Time": 1786557100,
+          "claimed": 1,
+          "complete": 1
+        },
+        "60": {
+          "state": 3,
+          "claimed": 1,
+          "complete": 1
+        },
+        "61": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1734564,
+          "Time": 1786563122,
+          "claimed": 1,
+          "complete": 1
+        },
+        "62": {
+          "state": 3,
+          "currCount": 3,
+          "oracleMask": 7,
+          "claimed": 1,
+          "complete": 1
+        },
+        "63": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1736193,
+          "Time": 1786563765,
+          "claimed": 1,
+          "complete": 1
+        },
+        "64": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1734316,
+          "Time": 1786564448,
+          "claimed": 1,
+          "complete": 1
+        },
+        "65": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1842520,
+          "Time": 1786565703,
+          "claimed": 1,
+          "complete": 1
+        },
+        "66": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1845021,
+          "Time": 1786567345,
+          "claimed": 1,
+          "complete": 1
+        },
+        "67": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1958067,
+          "Time": 1786569162,
+          "claimed": 1,
+          "complete": 1
+        },
+        "68": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1958997,
+          "Time": 1786569652,
+          "claimed": 1,
+          "complete": 1
+        },
+        "69": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1949865,
+          "Time": 1786571203,
+          "claimed": 1,
+          "complete": 1
+        },
+        "70": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1955103,
+          "Time": 1786571840,
+          "claimed": 1,
+          "complete": 1
+        },
+        "71": {
+          "state": 3,
+          "currCount": 0,
+          "claimed": 1,
+          "complete": 1
+        },
+        "72": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1845078,
+          "Time": 1786565108,
+          "claimed": 1,
+          "complete": 1
+        },
+        "73": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1814990,
+          "Time": 1786566843,
+          "claimed": 1,
+          "complete": 1
+        },
+        "74": {
+          "state": 3,
+          "currCount": 5,
+          "claimed": 1,
+          "complete": 1
+        },
+        "75": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "76": {
+          "state": 1,
+          "currCount": 0
+        },
+        "78": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "79": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "83": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2062871,
+          "Time": 1786572833,
+          "claimed": 1,
+          "complete": 1
+        },
+        "84": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2049000,
+          "Time": 1786573381,
+          "claimed": 1,
+          "complete": 1
+        },
+        "85": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2167800,
+          "Time": 1786574795,
+          "claimed": 1,
+          "complete": 1
+        },
+        "86": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2178870,
+          "Time": 1786575481,
+          "claimed": 1,
+          "complete": 1
+        },
+        "88": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2158711,
+          "Time": 1786577346,
+          "claimed": 1,
+          "complete": 1
+        },
+        "89": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "90": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "91": {
+          "state": 3,
+          "currCount": 20,
+          "claimed": 1,
+          "complete": 1
+        },
+        "92": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2279568,
+          "Time": 1786580201,
+          "claimed": 1,
+          "complete": 1
+        },
+        "93": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2281256,
+          "Time": 1786665610,
+          "claimed": 1,
+          "complete": 1
+        },
+        "94": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2387389,
+          "Time": 1786666271,
+          "claimed": 1,
+          "complete": 1
+        },
+        "95": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 9,
+          "highscore": 1559238,
+          "Time": 1786716953,
+          "claimed": 1,
+          "complete": 1
+        },
+        "96": {
+          "state": 1,
+          "currCount": 0
+        },
+        "97": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 2286978,
+          "Time": 1786665057,
+          "claimed": 1,
+          "complete": 1
+        },
+        "98": {
+          "state": 3,
+          "currCount": 30,
+          "claimed": 1,
+          "complete": 1
+        },
+        "99": {
+          "state": 3,
+          "currCount": 10,
+          "claimed": 1,
+          "complete": 1
+        },
+        "271": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 308265,
+          "Time": 1786497029,
+          "claimed": 1,
+          "complete": 1
+        },
+        "273": {
+          "state": 3,
+          "currCount": 1,
+          "Tier": 10,
+          "highscore": 1512127,
+          "Time": 1786578978,
+          "claimed": 1,
+          "complete": 1
+        }
+      },
+      "questTrackerState": 29,
+      "friends": [],
+      "learnedAbilities": [
+        {
+          "abilityID": 19,
+          "rank": 4
+        },
+        {
+          "abilityID": 20,
+          "rank": 1
+        },
+        {
+          "abilityID": 21,
+          "rank": 1
+        },
+        {
+          "abilityID": 22,
+          "rank": 1
+        },
+        {
+          "abilityID": 23,
+          "rank": 1
+        },
+        {
+          "abilityID": 24,
+          "rank": 4
+        },
+        {
+          "abilityID": 25,
+          "rank": 4
+        },
+        {
+          "abilityID": 26,
+          "rank": 1
+        },
+        {
+          "abilityID": 27,
+          "rank": 1
+        },
+        {
+          "abilityID": 54,
+          "rank": 4
+        },
+        {
+          "abilityID": 55,
+          "rank": 2
+        }
+      ],
+      "activeAbilities": [
+        19,
+        24,
+        25
+      ],
+      "craftTalentPoints": [
+        0,
+        10,
+        7,
+        0,
+        1
+      ],
+      "talentPoints": {
+        "1": 15
+      },
+      "magicForge": {
+        "stats_by_building": {
+          "1": 4,
+          "2": 5,
+          "4": 4,
+          "6": 0,
+          "7": 0,
+          "8": 0,
+          "12": 5,
+          "13": 5
+        },
+        "primary": 0,
+        "secondary": 0,
+        "ReadyTime": 0,
+        "secondary_tier": 0,
+        "usedlist": 0,
+        "forge_roll_a": 0,
+        "forge_roll_b": 0,
+        "is_extended_forge": false,
+        "free_speedup_reason": ""
+      },
+      "SkillResearch": {},
+      "buildingUpgrade": {
+        "buildingID": 0,
+        "rank": 0,
+        "ReadyTime": 0
+      },
+      "talentResearch": {
+        "classIndex": null,
+        "ReadyTime": 0
+      },
+      "EggHachery": {
+        "EggID": 0,
+        "ReadyTime": 0,
+        "slotIndex": 0
+      },
+      "OwnedEggsID": [
+        2,
+        1,
+        4,
+        1,
+        2
+      ],
+      "EggNotifySent": false,
+      "EggResetTime": 1786736191,
+      "activeEggCount": 0,
+      "restingPets": [
+        {
+          "typeID": 48,
+          "special_id": 4
+        },
+        {
+          "typeID": 2,
+          "special_id": 8
+        },
+        {
+          "typeID": 27,
+          "special_id": 1,
+          "level": 10
+        }
+      ],
+      "trainingPet": [],
+      "MasterClass": 4,
+      "TalentTree": {
+        "4": {
+          "nodes": [
+            {
+              "nodeID": 2,
+              "points": 5,
+              "filled": true
+            },
+            {
+              "nodeID": 3,
+              "points": 2,
+              "filled": true
+            },
+            {
+              "nodeID": 5,
+              "points": 3,
+              "filled": true
+            },
+            {
+              "nodeID": 1,
+              "points": 3,
+              "filled": true
+            },
+            {
+              "nodeID": 9,
+              "points": 5,
+              "filled": true
+            },
+            {
+              "nodeID": 11,
+              "points": 3,
+              "filled": true
+            },
+            {
+              "nodeID": 8,
+              "points": 2,
+              "filled": true
+            },
+            {
+              "nodeID": 13,
+              "points": 3,
+              "filled": true
+            },
+            {
+              "nodeID": 9,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 17,
+              "points": 3,
+              "filled": true
+            },
+            {
+              "nodeID": 11,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 12,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 13,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 14,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 15,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 16,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 17,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 18,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 19,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 20,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 21,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 22,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 23,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 24,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 25,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 26,
+              "points": 0,
+              "filled": false
+            },
+            {
+              "nodeID": 27,
+              "points": 0,
+              "filled": false
+            }
+          ]
+        }
+      },
+      "equippedMount": 107,
+      "activePet": {
+        "typeID": 8,
+        "special_id": 7,
+        "xp": 160504,
+        "level": 10
+      },
+      "activeConsumableID": 0,
+      "queuedConsumableID": 0,
+      "guild": {},
+      "dialogueLanguage": "en",
+      "ignored": [],
+      "GroundedSpawns": {
+        "TutorialBoat": {
+          "x": 6295,
+          "y": 619,
+          "at": 1786495735935
+        },
+        "NewbieRoad": {
+          "x": 9462,
+          "y": 579,
+          "at": 1786536897210
+        },
+        "TutorialDungeon": {
+          "x": 515,
+          "y": 1367,
+          "at": 1786535822440
+        },
+        "CraftTownTutorial": {
+          "x": -6886,
+          "y": 1621,
+          "at": 1786496280307
+        },
+        "CraftTown": {
+          "x": -265,
+          "y": 1053,
+          "at": 1786716569503
+        },
+        "GoblinRiverDungeon": {
+          "x": 592,
+          "y": 1659,
+          "at": 1786496560182
+        },
+        "GhostBossDungeon": {
+          "x": 611,
+          "y": -541,
+          "at": 1786536516158
+        },
+        "DreamDragonDungeon": {
+          "x": -3453,
+          "y": -641,
+          "at": 1786497678789
+        },
+        "SwampRoadNorth": {
+          "x": 23176,
+          "y": 200,
+          "at": 1786543702146
+        },
+        "SRN_Mission1": {
+          "x": -3160,
+          "y": -861,
+          "at": 1786535258234
+        },
+        "SRN_Mission3": {
+          "x": -1050,
+          "y": 1099,
+          "at": 1786537389620
+        },
+        "SRN_Mission2": {
+          "x": -2830,
+          "y": 985,
+          "at": 1786540516322
+        },
+        "SRN_Mission4": {
+          "x": 480,
+          "y": 1039,
+          "at": 1786541125830
+        },
+        "SRN_Mission5": {
+          "x": -4723,
+          "y": 150,
+          "at": 1786541603190
+        },
+        "SRN_Mission7": {
+          "x": -317,
+          "y": 379,
+          "at": 1786542562795
+        },
+        "SRN_Mission6": {
+          "x": -2983,
+          "y": 699,
+          "at": 1786543012599
+        },
+        "SwampRoadConnectionMission": {
+          "x": 150,
+          "y": 359,
+          "at": 1786543818623
+        },
+        "BridgeTown": {
+          "x": 16999,
+          "y": -298,
+          "at": 1786579189328
+        },
+        "BT_Mission1": {
+          "x": -4119,
+          "y": 937,
+          "at": 1786544382440
+        },
+        "BT_Mission2": {
+          "x": -3932,
+          "y": 955,
+          "at": 1786544862802
+        },
+        "CemeteryHill": {
+          "x": 8767,
+          "y": 3359,
+          "at": 1786557939710
+        },
+        "CH_Mission2": {
+          "x": 70,
+          "y": 379,
+          "at": 1786545509948
+        },
+        "CH_Mission1": {
+          "x": -4255,
+          "y": 1023,
+          "at": 1786546674458
+        },
+        "CH_Mission5": {
+          "x": -150,
+          "y": 419,
+          "at": 1786547123149
+        },
+        "CH_Mission4": {
+          "x": -3871,
+          "y": 1059,
+          "at": 1786552247463
+        },
+        "CH_Mission3": {
+          "x": -1150,
+          "y": 1599,
+          "at": 1786552891327
+        },
+        "CH_Mission6": {
+          "x": -5092,
+          "y": 1371,
+          "at": 1786553428461
+        },
+        "CH_Mission7": {
+          "x": -4255,
+          "y": 1019,
+          "at": 1786555343876
+        },
+        "CH_Mission8": {
+          "x": -512,
+          "y": -1395,
+          "at": 1786555889358
+        },
+        "CH_MiniMission5": {
+          "x": -3770,
+          "y": 679,
+          "at": 1786556337733
+        },
+        "CH_MiniMission6": {
+          "x": -1767,
+          "y": 552,
+          "at": 1786557111371
+        },
+        "CH_MiniMission7": {
+          "x": -4110,
+          "y": 1779,
+          "at": 1786556851639
+        },
+        "CH_MiniMission8": {
+          "x": -3449,
+          "y": 739,
+          "at": 1786556742183
+        },
+        "CH_MiniMission9": {
+          "x": -3998,
+          "y": 1159,
+          "at": 1786557006054
+        },
+        "CH_MiniMission4": {
+          "x": -4424,
+          "y": 999,
+          "at": 1786557288646
+        },
+        "CH_MiniMission3": {
+          "x": -3750,
+          "y": 1019,
+          "at": 1786557455895
+        },
+        "CH_MiniMission1": {
+          "x": -3775,
+          "y": 679,
+          "at": 1786557610198
+        },
+        "CH_MiniMission2": {
+          "x": -2458,
+          "y": 559,
+          "at": 1786557766008
+        },
+        "BT_Mission3": {
+          "x": -4050,
+          "y": 838,
+          "at": 1786558108695
+        },
+        "BT_Mission4": {
+          "x": -4266,
+          "y": 1029,
+          "at": 1786558624899
+        },
+        "OldMineMountain": {
+          "x": 17398,
+          "y": 4019,
+          "at": 1786578989905
+        },
+        "OMM_Mission1": {
+          "x": 540,
+          "y": 1879,
+          "at": 1786567470796
+        },
+        "OMM_Mission2": {
+          "x": 1711,
+          "y": 4306,
+          "at": 1786563229885
+        },
+        "OMM_Mission3": {
+          "x": 5913,
+          "y": 139,
+          "at": 1786563843992
+        },
+        "OMM_Mission4": {
+          "x": -2429,
+          "y": 1319,
+          "at": 1786564652194
+        },
+        "OMM_Mission5": {
+          "x": 240,
+          "y": 1118,
+          "at": 1786565148246
+        },
+        "OMM_Mission6": {
+          "x": -1973,
+          "y": 1459,
+          "at": 1786566397446
+        },
+        "OMM_Mission7": {
+          "x": 481,
+          "y": 2259,
+          "at": 1786566886476
+        },
+        "EmeraldGlades": {
+          "x": 6821,
+          "y": 1959,
+          "at": 1786578335786
+        },
+        "OMM_Mission8": {
+          "x": 2375,
+          "y": 860,
+          "at": 1786568636280
+        },
+        "OMM_Mission9": {
+          "x": -1722,
+          "y": -1101,
+          "at": 1786569168447
+        },
+        "OMM_Mission10": {
+          "x": -270,
+          "y": -861,
+          "at": 1786570756779
+        },
+        "OMM_Mission11": {
+          "x": -3082,
+          "y": -881,
+          "at": 1786571207265
+        },
+        "EG_Mission1": {
+          "x": -1799,
+          "y": 719,
+          "at": 1786572362749
+        },
+        "EG_Mission2": {
+          "x": -4047,
+          "y": 1202,
+          "at": 1786572895567
+        },
+        "EG_Mission3": {
+          "x": -4143,
+          "y": 1059,
+          "at": 1786574386999
+        },
+        "EG_Mission4": {
+          "x": -1802,
+          "y": 739,
+          "at": 1786575032446
+        },
+        "EG_Mission5": {
+          "x": -4182,
+          "y": 1039,
+          "at": 1786576897141
+        },
+        "OMM_Mission12": {
+          "x": -2890,
+          "y": -787,
+          "at": 1786578498906
+        },
+        "AC_Mission1": {
+          "x": -4174,
+          "y": -1662,
+          "at": 1786579663527
+        },
+        "Castle": {
+          "x": 16822,
+          "y": -1981,
+          "at": 1786716962476
+        },
+        "AC_Mission2": {
+          "x": -492,
+          "y": -1881,
+          "at": 1786664573337
+        },
+        "AC_Mission3": {
+          "x": -489,
+          "y": -1881,
+          "at": 1786665124753
+        },
+        "AC_Mission4": {
+          "x": -351,
+          "y": -1881,
+          "at": 1786665797955
+        },
+        "AC_Mission5": {
+          "x": -511,
+          "y": -1821,
+          "at": 1786716783923
+        },
+        "AC_Mission6": {
+          "x": -459,
+          "y": -1815,
+          "at": 1786717002338
+        },
+        "LegendsInn1Hard": {
+          "x": 591,
+          "y": 1659,
+          "at": 1786670149590
+        }
+      },
+      "achievements": {
+        "goblinslayer": {
+          "count": 250,
+          "claimed": false
+        }
+      },
+      "lastCompletedDungeonLevel": "AC_Mission5",
+      "LastRegionPosition": {
+        "levelName": "Castle",
+        "x": 15403,
+        "y": 738,
+        "timestamp": 1786717002307,
+        "characterId": 0,
+        "userId": 9
+      },
+      "homeStatues": {
+        "Paladin": {
+          "characterName": "RendzerA",
+          "characterClass": "Paladin",
+          "gender": "",
+          "headSet": "Short",
+          "hairSet": "Do12",
+          "mouthSet": "M06",
+          "faceSet": "F01",
+          "hairColor": 2434341,
+          "skinColor": 13403493,
+          "shirtColor": 197379,
+          "pantColor": 197379,
+          "level": 24,
+          "masterClass": 4,
+          "equippedGears": [
+            {
+              "gearID": 98,
+              "tier": 0,
+              "runes": [
+                25,
+                25,
+                25
+              ],
+              "colors": [
+                0,
+                0
+              ]
+            },
+            {
+              "gearID": 643,
+              "tier": 0,
+              "runes": [
+                25,
+                25,
+                25
+              ],
+              "colors": [
+                0,
+                0
+              ]
+            },
+            {
+              "gearID": 456,
+              "tier": 0,
+              "runes": [
+                25,
+                25,
+                25
+              ],
+              "colors": [
+                0,
+                0
+              ]
+            },
+            {
+              "gearID": 737,
+              "tier": 1,
+              "runes": [
+                25,
+                25,
+                25
+              ],
+              "colors": [
+                0,
+                0
+              ]
+            },
+            {
+              "gearID": 1177,
+              "tier": 2,
+              "runes": [
+                20505,
+                19481,
+                25
+              ],
+              "colors": [
+                0,
+                0
+              ]
+            },
+            {
+              "gearID": 16,
+              "tier": 1,
+              "runes": [
+                25,
+                25,
+                25
+              ],
+              "colors": [
+                0,
+                0
+              ]
+            }
+          ],
+          "updatedAt": 1786716569504
+        }
+      },
+      "forgeFreeSpeedupUses": {},
+      "clearTheBanditsServerPresentationMigrated": true,
+      "clearTheBanditsPresentationResetV3": true,
+      "legendsInnBriefed": true
+    }
+  ]
+}
