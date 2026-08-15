@@ -119,6 +119,10 @@ export class DungeonCompletionConditions {
         return Boolean(DungeonCompletionConditions.get(levelName)?.requireBossDefeatSignal);
     }
 
+    static rejectsClientBossHealing(levelName: string | null | undefined): boolean {
+        return Boolean(DungeonCompletionConditions.get(levelName)?.rejectClientBossHealing);
+    }
+
     static getSimultaneousBossWindowMs(levelName: string | null | undefined): number {
         return Math.max(0, Math.round(Number(DungeonCompletionConditions.get(levelName)?.simultaneousBossWindowMs ?? 0)));
     }
@@ -280,6 +284,9 @@ export class DungeonCompletionConditions {
                 }
                 if (condition.requireBossDefeatSignal !== undefined && typeof condition.requireBossDefeatSignal !== 'boolean') {
                     errors.push(`${levelName}: requireBossDefeatSignal must be boolean`);
+                }
+                if (condition.rejectClientBossHealing !== undefined && typeof condition.rejectClientBossHealing !== 'boolean') {
+                    errors.push(`${levelName}: rejectClientBossHealing must be boolean`);
                 }
                 if (
                     condition.allowTerminalCanonicalBossWithoutRoomBossMarker !== undefined &&

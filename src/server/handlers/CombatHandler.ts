@@ -6218,16 +6218,19 @@ export class CombatHandler {
 
         const levelEntity = CombatHandler.resolveLevelEntity(levelScope, entityId);
         const targetEntity = levelEntity ?? entity;
-        const rejectLivingBossRegen = Boolean(
+        const rejectClientBossHealing = Boolean(
             amount > 0 &&
-            DungeonCompletionConditions.requiresBossDefeatSignal(getScopeLevelName(levelScope)) &&
+            (
+                DungeonCompletionConditions.requiresBossDefeatSignal(getScopeLevelName(levelScope)) ||
+                DungeonCompletionConditions.rejectsClientBossHealing(getScopeLevelName(levelScope))
+            ) &&
             DungeonCompletionConditions.isRequiredBoss(getScopeLevelName(levelScope), targetEntity, levelScope) &&
             (
                 CombatHandler.hasLivingPlayerInHostileRoom(levelScope, targetEntity) ||
                 !CombatHandler.isPlayerSessionDead(client)
             )
         );
-        if (rejectLivingBossRegen) {
+        if (rejectClientBossHealing) {
             // The client applies its local regen tick before reporting it. Undo
             // that visible heal while keeping the canonical boss HP unchanged.
             client.send(

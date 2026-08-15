@@ -25,6 +25,7 @@ export type DungeonCompletionCondition = {
     allowDefeatedBossProxyCopies?: boolean;
     requirePlayerDamageForClientBosses?: boolean;
     requireBossDefeatSignal?: boolean;
+    rejectClientBossHealing?: boolean;
     clientAuthorityBosses?: string[];
     requireRoomBossMarker?: boolean;
     allowVerifiedClientBossWithoutRoomBossMarker?: boolean;

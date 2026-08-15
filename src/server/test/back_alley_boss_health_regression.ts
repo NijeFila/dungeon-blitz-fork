@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert';
 import * as path from 'path';
 import { EntityState, EntityTeam } from '../core/Entity';
+import { DungeonCompletionConditions } from '../core/DungeonCompletionConditions';
 import { GameData } from '../core/GameData';
 import { GlobalState } from '../core/GlobalState';
 import { LevelConfig } from '../core/LevelConfig';
@@ -82,10 +83,111 @@ function testDamageToSurvivorDoesNotReviveDefeatedTwin(
     }
 }
 
+function testClientHealingCannotRestoreBossHealth(
+    levelName: string,
+    bossName: string
+): void {
+    const levelInstanceId = `back-alley-client-heal-${levelName}`;
+    const scope = getLevelScopeKey(levelName, levelInstanceId);
+    const boss = createBoss(83_001, bossName, 500);
+    const token = levelName.endsWith('Hard') ? 84_002 : 84_001;
+    boss.clientReportedDamageLifeNonce = 0;
+    boss.clientReportedDamageByToken = new Map([[token, 500]]);
+    const sent: Array<{ packetId: number; payload: Buffer }> = [];
+    const client = {
+        token,
+        currentLevel: levelName,
+        currentRoomId: 8,
+        levelInstanceId,
+        playerSpawned: true,
+        clientEntID: token + 1000,
+        authoritativeCurrentHp: 1000,
+        character: {
+            name: `${levelName}ClientHealTester`,
+            CurrentLevel: { name: levelName, x: 0, y: 0 }
+        },
+        entityIdAliases: new Map<number, number>(),
+        knownEntityIds: new Set<number>([boss.id]),
+        entities: new Map([[boss.id, boss]]),
+        send(packetId: number, payload: Buffer): void {
+            sent.push({ packetId, payload });
+        }
+    };
+    GlobalState.levelEntities.set(scope, new Map([[boss.id, boss]]));
+    GlobalState.sessionsByToken.set(token, client as never);
+
+    try {
+        const handled = (CombatHandler as any).recordClientHostileHpDelta(
+            client,
+            scope,
+            boss.id,
+            boss.id,
+            boss,
+            400
+        );
+
+        assert.equal(handled, true, `${levelName}: boss heal report was not handled`);
+        assert.equal(boss.hp, 500, `${levelName}: client heal changed canonical boss HP`);
+        assert.equal(
+            boss.clientReportedDamageByToken.get(token),
+            500,
+            `${levelName}: client heal erased recorded boss damage`
+        );
+        assert.equal(sent.length, 1, `${levelName}: client heal was not corrected`);
+        assert.equal(sent[0].packetId, 0x78, `${levelName}: correction used the wrong packet`);
+        assert.equal(
+            sent[0].payload.equals((CombatHandler as any).buildHpDeltaPayload(boss.id, -400)),
+            true,
+            `${levelName}: correction did not remove the client-side heal`
+        );
+
+        boss.hp = 0;
+        boss.healthDelta = -boss.maxHp;
+        boss.health_delta = -boss.maxHp;
+        boss.dead = true;
+        boss.entState = EntityState.DEAD;
+        boss.clientReportedDamageByToken.set(token, boss.maxHp);
+        sent.length = 0;
+
+        (CombatHandler as any).recordClientHostileHpDelta(
+            client,
+            scope,
+            boss.id,
+            boss.id,
+            boss,
+            boss.maxHp
+        );
+
+        assert.equal(boss.hp, 0, `${levelName}: defeated boss regained canonical HP`);
+        assert.equal(boss.dead, true, `${levelName}: defeated boss was revived by a client heal`);
+        assert.equal(boss.entState, EntityState.DEAD, `${levelName}: defeated boss returned to active state`);
+        assert.equal(
+            boss.clientReportedDamageByToken.get(token),
+            boss.maxHp,
+            `${levelName}: revive report erased the lethal damage record`
+        );
+        assert.equal(sent.length, 1, `${levelName}: revive report was not corrected`);
+    } finally {
+        GlobalState.sessionsByToken.delete(token);
+        GlobalState.levelEntities.delete(scope);
+    }
+}
+
 function main(): void {
     const dataDir = path.resolve(__dirname, '../data');
     LevelConfig.load(dataDir);
     GameData.load(dataDir);
+
+    assert.equal(
+        DungeonCompletionConditions.rejectsClientBossHealing('JC_Mission2'),
+        true,
+        'Back Alley Deals must reject client-side boss healing'
+    );
+    assert.equal(
+        DungeonCompletionConditions.rejectsClientBossHealing('JC_Mission2Hard'),
+        true,
+        'Back Alley Deals Hard must reject client-side boss healing'
+    );
 
     testDamageToSurvivorDoesNotReviveDefeatedTwin(
         'JC_Mission2',
@@ -97,6 +199,8 @@ function main(): void {
         'GreaterBoneGolemHard',
         'GreaterBoneGolem2Hard'
     );
+    testClientHealingCannotRestoreBossHealth('JC_Mission2', 'GreaterBoneGolem2');
+    testClientHealingCannotRestoreBossHealth('JC_Mission2Hard', 'GreaterBoneGolem2Hard');
 
     console.log('back_alley_boss_health_regression: ok');
 }
