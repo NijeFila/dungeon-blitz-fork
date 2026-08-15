@@ -6481,7 +6481,14 @@ export class CombatHandler {
             return false;
         }
 
-        if (CombatHandler.hasDerivedHostileHealthPool(levelScope, targetEntity, healthState.maxHp)) {
+        const completedFromTrustedDerivedPool = Boolean(
+            CombatHandler.hasDerivedHostileHealthPool(levelScope, targetEntity, healthState.maxHp) &&
+            DungeonCompletionConditions.allowsDerivedBossHpCompletion(getScopeLevelName(levelScope))
+        );
+        if (
+            CombatHandler.hasDerivedHostileHealthPool(levelScope, targetEntity, healthState.maxHp) &&
+            !completedFromTrustedDerivedPool
+        ) {
             CombatHandler.logDeferredDerivedPoolBossKill(levelScope, targetEntity, healthState, totalReportedDamage);
             return false;
         }
@@ -6504,6 +6511,11 @@ export class CombatHandler {
             noteSharedDungeonHostileDestroyed(levelScope, canonicalId, completedEntity);
             LevelHandler.refreshSharedDungeonQuestProgress(levelScope);
         }
+        if (completedFromTrustedDerivedPool) {
+            CombatHandler.finalizeHostileDeath(client, levelScope, canonicalId, completedEntity, {
+                reason: 'verified_derived_boss_hp_completion'
+            });
+        }
         CombatHandler.handleEnemyDefeatState(
             client,
             levelScope,
@@ -6511,6 +6523,34 @@ export class CombatHandler {
             completedEntity,
             { fromKillState: true }
         );
+        if (completedFromTrustedDerivedPool) {
+            for (const viewer of GlobalState.getSessionsInLevelScope(levelScope)) {
+                if (!viewer.playerSpawned || getClientLevelScope(viewer) !== levelScope) {
+                    continue;
+                }
+
+                const localId = viewer === client
+                    ? rawEntityId
+                    : EntityHandler.resolveEntityLocalId(viewer, canonicalId);
+                if (
+                    localId <= 0 ||
+                    (!viewer.entities.has(localId) && !viewer.knownEntityIds.has(localId))
+                ) {
+                    continue;
+                }
+
+                const localEntity = viewer.entities.get(localId) ?? viewer.entities.get(canonicalId) ?? completedEntity;
+                const maxHp = Math.max(1, Math.round(Number(localEntity?.maxHp ?? healthState.maxHp)) || healthState.maxHp);
+                viewer.send(
+                    CombatHandler.CLIENT_HEAL_PACKET_ID,
+                    CombatHandler.buildHpDeltaPayload(localId, -maxHp)
+                );
+                viewer.send(
+                    0x07,
+                    CombatHandler.buildEntityStatePayload(localId, EntityState.DEAD, Boolean(localEntity?.facingLeft))
+                );
+            }
+        }
         console.log('[CombatHandler] Verified required dungeon boss from client HP report', {
             scope: levelScope,
             sourceToken: client.token,

@@ -185,7 +185,8 @@ function buildDestroyEntityPayload(entityId: number): Buffer {
 async function testDamagedClientAuthorityBossDestroyIsFinal(
     levelName: string,
     bossName: string,
-    token: number
+    token: number,
+    completeFromTelemetry: boolean = false
 ): Promise<void> {
     const levelInstanceId = `back-alley-final-death-${levelName}`;
     const scope = getLevelScopeKey(levelName, levelInstanceId);
@@ -196,6 +197,10 @@ async function testDamagedClientAuthorityBossDestroyIsFinal(
     boss.hp = derivedMaxHp;
     boss.healthDelta = 0;
     boss.health_delta = 0;
+    if (completeFromTelemetry) {
+        boss.clientSpawned = false;
+        boss.hybridCanonicalHostile = true;
+    }
     const sent: Array<{ packetId: number; payload: Buffer }> = [];
     const client = {
         token,
@@ -231,19 +236,121 @@ async function testDamagedClientAuthorityBossDestroyIsFinal(
             boss.id,
             boss.id,
             boss,
-            -1
+            completeFromTelemetry ? -derivedMaxHp : -1
         );
         assert.equal(boss.playerDamageContributed, true, `${levelName}: boss damage was not recorded`);
 
-        await CombatHandler.handleEntityDestroy(client as never, buildDestroyEntityPayload(boss.id));
+        if (!completeFromTelemetry) {
+            await CombatHandler.handleEntityDestroy(client as never, buildDestroyEntityPayload(boss.id));
+        }
 
         assert.equal(boss.hp, 0, `${levelName}: boss destroy was corrected back to positive HP`);
         assert.equal(boss.dead, true, `${levelName}: damaged boss destroy did not commit death`);
         assert.equal(boss.destroyed, true, `${levelName}: damaged boss was allowed to respawn`);
+        if (completeFromTelemetry) {
+            assert.equal(
+                sent.some((packet) => packet.packetId === 0x07),
+                true,
+                `${levelName}: verified HP pool did not send the boss dead state`
+            );
+            assert.equal(
+                sent.some((packet) => packet.packetId === 0x0D),
+                false,
+                `${levelName}: verified boss was removed before the room script could observe its dead state`
+            );
+        } else {
+            assert.equal(
+                sent.some((packet) => packet.packetId === 0x07),
+                false,
+                `${levelName}: server sent an alive-state correction for the defeated boss`
+            );
+        }
+    } finally {
+        DungeonCompletionSystem.reset(scope);
+        GlobalState.sessionsByToken.delete(token);
+        GlobalState.levelEntities.delete(scope);
+        GlobalState.combatContributions.clear();
+    }
+}
+
+async function testFullBackAlleyEncounterCompletes(): Promise<void> {
+    const levelName = 'JC_Mission2';
+    const levelInstanceId = 'back-alley-full-encounter';
+    const scope = getLevelScopeKey(levelName, levelInstanceId);
+    const token = 86_007;
+    const mortis = createBoss(172_001, 'GreaterBoneGolem2', 500);
+    const seelie = createBoss(172_002, 'GreaterBoneGolem', 500);
+    const bosses = [mortis, seelie];
+    const sent: Array<{ packetId: number; payload: Buffer }> = [];
+
+    for (const boss of bosses) {
+        const maxHp = (CombatHandler as any).estimateHostileMaxHp(boss, levelName);
+        boss.maxHp = maxHp;
+        boss.hp = maxHp;
+        boss.healthDelta = 0;
+        boss.health_delta = 0;
+        boss.clientSpawned = false;
+        boss.hybridCanonicalHostile = true;
+    }
+
+    const client = {
+        token,
+        userId: token,
+        currentLevel: levelName,
+        currentRoomId: 8,
+        levelInstanceId,
+        playerSpawned: true,
+        clientEntID: token + 1000,
+        authoritativeCurrentHp: 1000,
+        character: {
+            name: 'BackAlleyFullEncounterTester',
+            CurrentLevel: { name: levelName, x: 0, y: 0 },
+            missions: {}
+        },
+        entityIdAliases: new Map<number, number>(),
+        knownEntityIds: new Set<number>(bosses.map((boss) => boss.id)),
+        entities: new Map(bosses.map((boss) => [boss.id, boss])),
+        activeDungeonCutsceneScope: '',
+        activeDungeonCutsceneRoomId: 0,
+        lastDungeonCutsceneStartAt: 0,
+        send(packetId: number, payload: Buffer): void {
+            sent.push({ packetId, payload });
+        }
+    };
+    GlobalState.levelEntities.set(scope, new Map(bosses.map((boss) => [boss.id, boss])));
+    GlobalState.sessionsByToken.set(token, client as never);
+
+    try {
+        for (const boss of bosses) {
+            (CombatHandler as any).recordClientHostileHpDelta(
+                client,
+                scope,
+                boss.id,
+                boss.id,
+                boss,
+                -boss.maxHp
+            );
+        }
+
+        assert.equal(mortis.destroyed, true, 'Mortis did not remain permanently dead');
+        assert.equal(seelie.destroyed, true, 'Seelie Ravager did not remain permanently dead');
         assert.equal(
-            sent.some((packet) => packet.packetId === 0x07),
-            false,
-            `${levelName}: server sent an alive-state correction for the defeated boss`
+            sent.filter((packet) => packet.packetId === 0x07).length,
+            2,
+            'both local boss entities did not receive a final dead state'
+        );
+        assert.equal(
+            DungeonCompletionSystem.evaluate(scope).objectivesMet,
+            true,
+            'defeating both Back Alley bosses did not satisfy the dungeon objectives'
+        );
+
+        DungeonCompletionSystem.noteCutsceneStart(scope, 8, Date.now());
+        assert.equal(DungeonCompletionSystem.noteCutsceneEnd(scope, 8, Date.now() + 1), true);
+        assert.equal(
+            DungeonCompletionSystem.evaluate(scope).ready,
+            true,
+            'the post-boss cinematic did not unlock the Back Alley victory screen'
         );
     } finally {
         DungeonCompletionSystem.reset(scope);
@@ -268,6 +375,16 @@ async function main(): Promise<void> {
         true,
         'Back Alley Deals Hard must reject client-side boss healing'
     );
+    assert.equal(
+        DungeonCompletionConditions.allowsDerivedBossHpCompletion('JC_Mission2'),
+        true,
+        'Back Alley Deals must accept its verified derived boss health pools'
+    );
+    assert.equal(
+        DungeonCompletionConditions.allowsDerivedBossHpCompletion('JC_Mission2Hard'),
+        true,
+        'Back Alley Deals Hard must accept its verified derived boss health pools'
+    );
 
     testDamageToSurvivorDoesNotReviveDefeatedTwin(
         'JC_Mission2',
@@ -285,6 +402,9 @@ async function main(): Promise<void> {
     await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2Hard', 'GreaterBoneGolem2Hard', 86_002);
     await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2', 'GreaterBoneGolem', 86_003);
     await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2Hard', 'GreaterBoneGolemHard', 86_004);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2', 'GreaterBoneGolem2', 86_005, true);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2Hard', 'GreaterBoneGolem2Hard', 86_006, true);
+    await testFullBackAlleyEncounterCompletes();
 
     console.log('back_alley_boss_health_regression: ok');
 }
