@@ -168,7 +168,9 @@ function testClientHealingCannotRestoreBossHealth(
             boss.maxHp,
             `${levelName}: revive report erased the lethal damage record`
         );
-        assert.equal(sent.length, 1, `${levelName}: revive report was not corrected`);
+        assert.equal(sent.length, 2, `${levelName}: revive report did not receive both final corrections`);
+        assert.equal(sent[0].packetId, 0x78, `${levelName}: revive heal was not reversed`);
+        assert.equal(sent[1].packetId, 0x07, `${levelName}: defeated boss dead state was not reasserted`);
     } finally {
         GlobalState.sessionsByToken.delete(token);
         GlobalState.levelEntities.delete(scope);
@@ -343,6 +345,22 @@ async function testFullBackAlleyEncounterCompletes(): Promise<void> {
             DungeonCompletionSystem.evaluate(scope).objectivesMet,
             true,
             'defeating both Back Alley bosses did not satisfy the dungeon objectives'
+        );
+
+        (CombatHandler as any).recordClientHostileHpDelta(
+            client,
+            scope,
+            mortis.id,
+            mortis.id,
+            mortis,
+            500
+        );
+        assert.equal(mortis.hp, 0, 'post-death client healing revived Mortis');
+        assert.equal(mortis.destroyed, true, 'post-death client healing cleared Mortis finalization');
+        assert.equal(
+            sent.at(-1)?.packetId,
+            0x07,
+            'post-death client traffic did not receive another dead-state correction'
         );
 
         DungeonCompletionSystem.noteCutsceneStart(scope, 8, Date.now());
