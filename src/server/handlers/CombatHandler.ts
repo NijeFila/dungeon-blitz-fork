@@ -5963,8 +5963,17 @@ export class CombatHandler {
             const healthState = CombatHandler.resolveHostileHealthStateAcrossCopies(levelScope, destroyedEntity) ??
                 CombatHandler.getNpcHealthState(destroyedEntity, levelScope);
             const canonicalHp = Math.max(0, Math.round(Number(destroyedEntity.hp ?? healthState?.currentHp ?? 0)));
+            const isClientAuthorityRequiredBoss = DungeonCompletionConditions.isClientAuthorityBoss(
+                levelName,
+                destroyedEntity,
+                levelScope
+            );
+            const hasVerifiedPlayerDamage = Boolean(
+                contributionSnapshot?.contributors?.length ||
+                (isClientAuthorityRequiredBoss && destroyedEntity.playerDamageContributed)
+            );
             const verifiedRequiredBossDestroy = Boolean(
-                contributionSnapshot?.contributors?.length &&
+                hasVerifiedPlayerDamage &&
                 MissionHandler.shouldCompleteDungeonFromBossHpReport(client, destroyedEntity)
             );
             if (Boolean(destroyedEntity.destroyed)) {

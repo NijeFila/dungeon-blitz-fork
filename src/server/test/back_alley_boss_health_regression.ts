@@ -2,11 +2,13 @@ import { strict as assert } from 'assert';
 import * as path from 'path';
 import { EntityState, EntityTeam } from '../core/Entity';
 import { DungeonCompletionConditions } from '../core/DungeonCompletionConditions';
+import { DungeonCompletionSystem } from '../core/DungeonCompletionSystem';
 import { GameData } from '../core/GameData';
 import { GlobalState } from '../core/GlobalState';
 import { LevelConfig } from '../core/LevelConfig';
 import { getLevelScopeKey } from '../core/LevelScope';
 import { CombatHandler } from '../handlers/CombatHandler';
+import { BitBuffer } from '../network/protocol/bitBuffer';
 
 function createBoss(id: number, name: string, hp: number): any {
     return {
@@ -173,7 +175,85 @@ function testClientHealingCannotRestoreBossHealth(
     }
 }
 
-function main(): void {
+function buildDestroyEntityPayload(entityId: number): Buffer {
+    const bb = new BitBuffer(false);
+    bb.writeMethod4(entityId);
+    bb.writeMethod15(true);
+    return bb.toBuffer();
+}
+
+async function testDamagedClientAuthorityBossDestroyIsFinal(
+    levelName: string,
+    bossName: string,
+    token: number
+): Promise<void> {
+    const levelInstanceId = `back-alley-final-death-${levelName}`;
+    const scope = getLevelScopeKey(levelName, levelInstanceId);
+    const boss = createBoss(85_000 + token, bossName, 500);
+    const derivedMaxHp = (CombatHandler as any).estimateHostileMaxHp(boss, levelName);
+    assert.ok(derivedMaxHp > 1, `${levelName}: could not derive the live boss health pool`);
+    boss.maxHp = derivedMaxHp;
+    boss.hp = derivedMaxHp;
+    boss.healthDelta = 0;
+    boss.health_delta = 0;
+    const sent: Array<{ packetId: number; payload: Buffer }> = [];
+    const client = {
+        token,
+        userId: token,
+        currentLevel: levelName,
+        currentRoomId: 8,
+        levelInstanceId,
+        playerSpawned: true,
+        clientEntID: token + 1000,
+        authoritativeCurrentHp: 1000,
+        character: {
+            name: `${levelName}FinalDeathTester`,
+            CurrentLevel: { name: levelName, x: 0, y: 0 },
+            missions: {}
+        },
+        entityIdAliases: new Map<number, number>(),
+        knownEntityIds: new Set<number>([boss.id]),
+        entities: new Map([[boss.id, boss]]),
+        activeDungeonCutsceneScope: '',
+        activeDungeonCutsceneRoomId: 0,
+        lastDungeonCutsceneStartAt: 0,
+        send(packetId: number, payload: Buffer): void {
+            sent.push({ packetId, payload });
+        }
+    };
+    GlobalState.levelEntities.set(scope, new Map([[boss.id, boss]]));
+    GlobalState.sessionsByToken.set(token, client as never);
+
+    try {
+        (CombatHandler as any).recordClientHostileHpDelta(
+            client,
+            scope,
+            boss.id,
+            boss.id,
+            boss,
+            -1
+        );
+        assert.equal(boss.playerDamageContributed, true, `${levelName}: boss damage was not recorded`);
+
+        await CombatHandler.handleEntityDestroy(client as never, buildDestroyEntityPayload(boss.id));
+
+        assert.equal(boss.hp, 0, `${levelName}: boss destroy was corrected back to positive HP`);
+        assert.equal(boss.dead, true, `${levelName}: damaged boss destroy did not commit death`);
+        assert.equal(boss.destroyed, true, `${levelName}: damaged boss was allowed to respawn`);
+        assert.equal(
+            sent.some((packet) => packet.packetId === 0x07),
+            false,
+            `${levelName}: server sent an alive-state correction for the defeated boss`
+        );
+    } finally {
+        DungeonCompletionSystem.reset(scope);
+        GlobalState.sessionsByToken.delete(token);
+        GlobalState.levelEntities.delete(scope);
+        GlobalState.combatContributions.clear();
+    }
+}
+
+async function main(): Promise<void> {
     const dataDir = path.resolve(__dirname, '../data');
     LevelConfig.load(dataDir);
     GameData.load(dataDir);
@@ -201,8 +281,15 @@ function main(): void {
     );
     testClientHealingCannotRestoreBossHealth('JC_Mission2', 'GreaterBoneGolem2');
     testClientHealingCannotRestoreBossHealth('JC_Mission2Hard', 'GreaterBoneGolem2Hard');
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2', 'GreaterBoneGolem2', 86_001);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2Hard', 'GreaterBoneGolem2Hard', 86_002);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2', 'GreaterBoneGolem', 86_003);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2Hard', 'GreaterBoneGolemHard', 86_004);
 
     console.log('back_alley_boss_health_regression: ok');
 }
 
-main();
+main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});
