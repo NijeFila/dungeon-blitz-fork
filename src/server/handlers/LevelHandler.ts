@@ -3295,11 +3295,15 @@ export class LevelHandler {
             const crossedTrigger =
                 previousX < trigger.triggerX &&
                 currentX >= trigger.triggerX;
+            // A room transition or client correction can make the first accepted position
+            // land beyond this narrow authored trigger. Recover that missed crossing while
+            // the player is still in its vertical band; triggeredLevelStates keeps it one-shot.
+            const alreadyPastTrigger = currentX >= trigger.triggerX;
             const insideTriggerBand =
                 currentY >= trigger.triggerMinY &&
                 currentY <= trigger.triggerMaxY;
 
-            if (!crossedTrigger || !insideTriggerBand) {
+            if (!(crossedTrigger || alreadyPastTrigger) || !insideTriggerBand) {
                 continue;
             }
 
