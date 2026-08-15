@@ -123,10 +123,6 @@ export class DungeonCompletionConditions {
         return Boolean(DungeonCompletionConditions.get(levelName)?.rejectClientBossHealing);
     }
 
-    static allowsDerivedBossHpCompletion(levelName: string | null | undefined): boolean {
-        return Boolean(DungeonCompletionConditions.get(levelName)?.allowDerivedBossHpCompletion);
-    }
-
     static getSimultaneousBossWindowMs(levelName: string | null | undefined): number {
         return Math.max(0, Math.round(Number(DungeonCompletionConditions.get(levelName)?.simultaneousBossWindowMs ?? 0)));
     }
@@ -137,6 +133,10 @@ export class DungeonCompletionConditions {
 
     static acceptsRoomBossClearSignal(levelName: string | null | undefined): boolean {
         return Boolean(DungeonCompletionConditions.get(levelName)?.acceptRoomBossClearSignal);
+    }
+
+    static requiresRoomBossClearSignal(levelName: string | null | undefined): boolean {
+        return Boolean(DungeonCompletionConditions.get(levelName)?.requireRoomBossClearSignal);
     }
 
     static getRequiredBossNames(levelName: string | null | undefined): ReadonlySet<string> {
@@ -293,12 +293,6 @@ export class DungeonCompletionConditions {
                     errors.push(`${levelName}: rejectClientBossHealing must be boolean`);
                 }
                 if (
-                    condition.allowDerivedBossHpCompletion !== undefined &&
-                    typeof condition.allowDerivedBossHpCompletion !== 'boolean'
-                ) {
-                    errors.push(`${levelName}: allowDerivedBossHpCompletion must be boolean`);
-                }
-                if (
                     condition.allowTerminalCanonicalBossWithoutRoomBossMarker !== undefined &&
                     typeof condition.allowTerminalCanonicalBossWithoutRoomBossMarker !== 'boolean'
                 ) {
@@ -315,6 +309,15 @@ export class DungeonCompletionConditions {
                     typeof condition.acceptRoomBossClearSignal !== 'boolean'
                 ) {
                     errors.push(`${levelName}: acceptRoomBossClearSignal must be boolean`);
+                }
+                if (
+                    condition.requireRoomBossClearSignal !== undefined &&
+                    typeof condition.requireRoomBossClearSignal !== 'boolean'
+                ) {
+                    errors.push(`${levelName}: requireRoomBossClearSignal must be boolean`);
+                }
+                if (condition.requireRoomBossClearSignal && !condition.acceptRoomBossClearSignal) {
+                    errors.push(`${levelName}: requireRoomBossClearSignal requires acceptRoomBossClearSignal`);
                 }
             }
             if (condition.mode === 'objectives' && !condition.entityObjectives?.length) {

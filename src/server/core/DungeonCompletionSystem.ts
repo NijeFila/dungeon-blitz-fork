@@ -932,6 +932,10 @@ export class DungeonCompletionSystem {
             return false;
         }
 
+        if (condition.requireRoomBossClearSignal && state.roomBossClearSequence <= 0) {
+            return false;
+        }
+
         for (const group of condition.bossGroups ?? []) {
             if (!group.some((bossName) => state.defeatedBosses.has(bossName))) {
                 return false;

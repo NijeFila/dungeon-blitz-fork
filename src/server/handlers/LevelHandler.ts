@@ -6097,9 +6097,19 @@ export class LevelHandler {
             Number(canonicalEntity.team ?? 0) === EntityTeam.ENEMY;
         const canonicalHp = Math.round(Number(canonicalEntity?.hp ?? 1));
         const canonicalDestroyed = Boolean(canonicalEntity?.destroyed);
+        const defersIndividualBossDefeatToRoomClear = Boolean(
+            isEnemyCanonical &&
+            DungeonCompletionConditions.requiresRoomBossClearSignal(currentLevel) &&
+            DungeonCompletionConditions.isRequiredBoss(
+                currentLevel,
+                canonicalEntity,
+                getClientLevelScope(client)
+            )
+        );
         const acceptsClientAuthorityTerminal = Boolean(
             isEnemyCanonical &&
             isDefeatEntState &&
+            !defersIndividualBossDefeatToRoomClear &&
             DungeonCompletionConditions.isClientAuthorityBoss(
                 currentLevel,
                 canonicalEntity,
@@ -6126,6 +6136,18 @@ export class LevelHandler {
                     acceptedEntity.health_delta = -maxHp;
                 }
             }
+        }
+        if (defersIndividualBossDefeatToRoomClear && isDefeatEntState) {
+            console.log('[BACK-ALLEY-DIAG] individualBossDefeatDeferredToRoomClear', {
+                scope: getClientLevelScope(client),
+                sourceToken: client.token,
+                rawEntityId,
+                canonicalId: entityId,
+                name: String(canonicalEntity?.name ?? ''),
+                hp: Number(canonicalEntity?.hp ?? 0),
+                roomId: Number(canonicalEntity?.roomId ?? client.currentRoomId ?? 0)
+            });
+            return;
         }
         if (canonicalTerminal) {
             if (

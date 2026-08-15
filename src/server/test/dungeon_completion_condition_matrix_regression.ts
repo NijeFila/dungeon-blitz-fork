@@ -206,6 +206,19 @@ function satisfyCondition(scenario: Scenario, participantKey: string, baseTime: 
         }
     }
 
+    if (condition.requireRoomBossClearSignal) {
+        assert.strictEqual(
+            DungeonCompletionSystem.evaluate(levelScope, baseTime + 400 + simultaneousWindowMs).ready,
+            false,
+            `${levelName}: completed before the authored room boss clear signal`
+        );
+        assert.strictEqual(
+            DungeonCompletionSystem.noteRoomBossClear(levelScope, 99, baseTime + 401 + simultaneousWindowMs),
+            true,
+            `${levelName}: rejected its authored room boss clear signal`
+        );
+    }
+
     const gateBaseTime = baseTime + 500 + simultaneousWindowMs;
     if (condition.autoCompleteOnObjectives === false) {
         assert.strictEqual(

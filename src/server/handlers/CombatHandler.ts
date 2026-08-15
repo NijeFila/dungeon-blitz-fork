@@ -5862,19 +5862,6 @@ export class CombatHandler {
             CombatHandler.isTerminalHostileEntity(destroyedEntity) &&
             DungeonCompletionConditions.isRequiredBoss(levelName, destroyedEntity, levelScope)
         ) {
-            if (levelName === 'JC_Mission2' || levelName === 'JC_Mission2Hard') {
-                console.log('[BACK-ALLEY-DIAG] postFinalizationDestroySignal', {
-                    scope: levelScope,
-                    sourceToken: client.token,
-                    rawEntityId,
-                    canonicalId: entityId,
-                    name: String(destroyedEntity?.name ?? ''),
-                    hp: Number(destroyedEntity?.hp ?? 0),
-                    dead: Boolean(destroyedEntity?.dead),
-                    destroyed: Boolean(destroyedEntity?.destroyed),
-                    entState: Number(destroyedEntity?.entState ?? EntityState.ACTIVE)
-                });
-            }
             destroyedEntity.clientDefeatVerified = true;
             await MissionHandler.handleForcedDungeonBossCompletion(client, destroyedEntity);
         }
@@ -6241,36 +6228,6 @@ export class CombatHandler {
         const levelEntity = CombatHandler.resolveLevelEntity(levelScope, entityId);
         const targetEntity = levelEntity ?? entity;
         const levelName = getScopeLevelName(levelScope);
-        const isBackAlleyBoss = Boolean(
-            (levelName === 'JC_Mission2' || levelName === 'JC_Mission2Hard') &&
-            targetEntity &&
-            DungeonCompletionConditions.isRequiredBoss(levelName, targetEntity, levelScope)
-        );
-        if (isBackAlleyBoss && CombatHandler.isTerminalHostileEntity(targetEntity)) {
-            if (amount > 0) {
-                client.send(
-                    CombatHandler.CLIENT_HEAL_PACKET_ID,
-                    CombatHandler.buildHpDeltaPayload(rawEntityId, -amount)
-                );
-            }
-            client.send(
-                0x07,
-                CombatHandler.buildEntityStatePayload(rawEntityId, EntityState.DEAD, Boolean(targetEntity?.facingLeft))
-            );
-            console.log('[BACK-ALLEY-DIAG] postFinalizationHpReport', {
-                scope: levelScope,
-                sourceToken: client.token,
-                rawEntityId,
-                canonicalId: Math.max(0, Math.round(Number(targetEntity?.id ?? entityId))),
-                name: String(targetEntity?.name ?? ''),
-                amount,
-                hp: Number(targetEntity?.hp ?? 0),
-                dead: Boolean(targetEntity?.dead),
-                destroyed: Boolean(targetEntity?.destroyed),
-                entState: Number(targetEntity?.entState ?? EntityState.ACTIVE)
-            });
-            return true;
-        }
         const rejectClientBossHealing = Boolean(
             amount > 0 &&
             (
@@ -6525,14 +6482,7 @@ export class CombatHandler {
             return false;
         }
 
-        const completedFromTrustedDerivedPool = Boolean(
-            CombatHandler.hasDerivedHostileHealthPool(levelScope, targetEntity, healthState.maxHp) &&
-            DungeonCompletionConditions.allowsDerivedBossHpCompletion(getScopeLevelName(levelScope))
-        );
-        if (
-            CombatHandler.hasDerivedHostileHealthPool(levelScope, targetEntity, healthState.maxHp) &&
-            !completedFromTrustedDerivedPool
-        ) {
+        if (CombatHandler.hasDerivedHostileHealthPool(levelScope, targetEntity, healthState.maxHp)) {
             CombatHandler.logDeferredDerivedPoolBossKill(levelScope, targetEntity, healthState, totalReportedDamage);
             return false;
         }
@@ -6555,11 +6505,6 @@ export class CombatHandler {
             noteSharedDungeonHostileDestroyed(levelScope, canonicalId, completedEntity);
             LevelHandler.refreshSharedDungeonQuestProgress(levelScope);
         }
-        if (completedFromTrustedDerivedPool) {
-            CombatHandler.finalizeHostileDeath(client, levelScope, canonicalId, completedEntity, {
-                reason: 'verified_derived_boss_hp_completion'
-            });
-        }
         CombatHandler.handleEnemyDefeatState(
             client,
             levelScope,
@@ -6567,50 +6512,6 @@ export class CombatHandler {
             completedEntity,
             { fromKillState: true }
         );
-        if (completedFromTrustedDerivedPool) {
-            const relayedViewers: Array<{ token: number; localId: number }> = [];
-            for (const viewer of GlobalState.getSessionsInLevelScope(levelScope)) {
-                if (!viewer.playerSpawned || getClientLevelScope(viewer) !== levelScope) {
-                    continue;
-                }
-
-                const localId = viewer === client
-                    ? rawEntityId
-                    : EntityHandler.resolveEntityLocalId(viewer, canonicalId);
-                if (
-                    localId <= 0 ||
-                    (!viewer.entities.has(localId) && !viewer.knownEntityIds.has(localId))
-                ) {
-                    continue;
-                }
-
-                const localEntity = viewer.entities.get(localId) ?? viewer.entities.get(canonicalId) ?? completedEntity;
-                const maxHp = Math.max(1, Math.round(Number(localEntity?.maxHp ?? healthState.maxHp)) || healthState.maxHp);
-                viewer.send(
-                    CombatHandler.CLIENT_HEAL_PACKET_ID,
-                    CombatHandler.buildHpDeltaPayload(localId, -maxHp)
-                );
-                viewer.send(
-                    0x07,
-                    CombatHandler.buildEntityStatePayload(localId, EntityState.DEAD, Boolean(localEntity?.facingLeft))
-                );
-                relayedViewers.push({ token: viewer.token, localId });
-            }
-            console.log('[BACK-ALLEY-DIAG] verifiedDerivedBossDeathCommitted', {
-                scope: levelScope,
-                sourceToken: client.token,
-                rawEntityId,
-                canonicalId,
-                name: String(completedEntity?.name ?? ''),
-                derivedMaxHp: healthState.maxHp,
-                totalReportedDamage,
-                hp: Number(completedEntity?.hp ?? 0),
-                dead: Boolean(completedEntity?.dead),
-                destroyed: Boolean(completedEntity?.destroyed),
-                entState: Number(completedEntity?.entState ?? EntityState.ACTIVE),
-                relayedViewers
-            });
-        }
         console.log('[CombatHandler] Verified required dungeon boss from client HP report', {
             scope: levelScope,
             sourceToken: client.token,

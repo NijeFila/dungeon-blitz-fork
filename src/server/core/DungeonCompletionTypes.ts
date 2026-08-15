@@ -21,12 +21,12 @@ export type DungeonCompletionCondition = {
     simultaneousBossWindowMs?: number;
     requireBossesCurrentlyDefeated?: boolean;
     acceptRoomBossClearSignal?: boolean;
+    requireRoomBossClearSignal?: boolean;
     autoCompleteOnObjectives?: boolean;
     allowDefeatedBossProxyCopies?: boolean;
     requirePlayerDamageForClientBosses?: boolean;
     requireBossDefeatSignal?: boolean;
     rejectClientBossHealing?: boolean;
-    allowDerivedBossHpCompletion?: boolean;
     clientAuthorityBosses?: string[];
     requireRoomBossMarker?: boolean;
     allowVerifiedClientBossWithoutRoomBossMarker?: boolean;
