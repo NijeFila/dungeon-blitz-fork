@@ -26,6 +26,24 @@ Current priorities:
 * Gameplay balancing
 * Performance improvements
 
+## Recent dungeon fixes
+
+Release `1.24.11` documents the current server-side dungeon behavior:
+
+* **The Capstone (`AC_Mission6`)** - completion follows the Nephit encounter's real
+  multi-phase eye entities and waits for the final encounter state instead of treating a
+  persistent marker entity as the boss.
+* **Back Alley Deals (`JC_Mission2`)** - Mortis Golem and Seelie Ravager use reconciled
+  client/server health and terminal state. Both bosses must actually be defeated before the
+  completion cinematic and victory screen can begin.
+* **The Prodigal Son (`JC_Mission3`)** - the scripted actor is Prince Friedrich Hocke,
+  Sigismund's son. If a room transition or position correction places the player's first
+  accepted movement beyond one of Friedrich's authored wake-up triggers, the server now
+  recovers that trigger once so Friedrich does not remain stuck in `DeepSleep`.
+
+These are lifecycle and sequencing fixes. They do not skip bosses, force dungeon rewards, or
+mark encounters complete before their authored objectives are satisfied.
+
 ## Playing single player
 
 Everything runs on your own machine — the server, the game files and your saves. No

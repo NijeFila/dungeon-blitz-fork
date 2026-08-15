@@ -17,7 +17,8 @@ When working on this project, prioritize stability, original behavior, and regre
 - Never “fix” a crash by ignoring the underlying broken state.
 - Do not remove existing working logic unless there is clear evidence it is wrong.
 - Always check whether a change can affect fullscreen, 2K/4K scaling, cutscenes, boss spawns, combat state, or dungeon sequencing.
-- Do not bump project or package versions unless the user explicitly requests a version change.
+- Follow the repository `AGENTS.md` versioning policy: every committed project change includes
+  the appropriate semantic version bump, with root and server package versions kept in sync.
 
 ## Debugging Priorities
 
@@ -71,6 +72,28 @@ Special attention:
 - Mortis Golem
 - Jade City / Back Alley Deals
 - JC_Mission2 boss sequence
+- Prince Friedrich Hocke / The Prodigal Son
+- JC_Mission3 room triggers and actor wake-up sequencing
+
+## Authored Actor / Room Trigger Rules
+
+Some dungeon actors begin in `DeepSleep` and rely on an authored room trigger to talk, move,
+or start the next encounter phase. The Flash client reports movement, while the server relays
+the trigger state shared by the dungeon session.
+
+When restoring a missed trigger:
+
+- Preserve the authored room id and trigger name.
+- Keep the authored vertical trigger band; being farther along in the level is not enough by
+  itself.
+- Recover a player whose first accepted position is already beyond the horizontal threshold.
+- Record the trigger in `triggeredLevelStates` before relaying it so recovery remains one-shot.
+- Relay the same trigger to every player in the level instance.
+- Do not wake actors globally or mark a mission complete as a substitute for the room event.
+
+For `JC_Mission3`, the affected actor is **Prince Friedrich Hocke**, not Sigismund Hocke.
+Friedrich is deliberately put into `DeepSleep` by the room scripts and must receive
+`am_Trigger_01` in the affected rooms to continue his authored dialogue and movement.
 
 ## Cutscene Rules
 
