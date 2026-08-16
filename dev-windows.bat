@@ -8,6 +8,7 @@ echo Dungeon Blitz ^(local dev server^)
 echo.
 
 :: Pull latest main while preserving local account/save edits in a git stash.
+if /i "%LAUNCHER_SMOKE_TEST%"=="true" goto :skip_update
 where git >nul 2>nul
 if %errorlevel% neq 0 (
     echo Git is not installed or not on PATH; skipping project update.
@@ -81,6 +82,7 @@ if %errorlevel% neq 0 (
         echo.
     )
 )
+:skip_update
 
 :: Node kontrol
 where node >nul 2>nul
@@ -118,6 +120,10 @@ if !errorlevel! neq 0 (
     exit /b !errorlevel!
 )
 echo.
+if /i "%LAUNCHER_SMOKE_TEST%"=="true" (
+    echo Launcher smoke test passed.
+    exit /b 0
+)
 
 set BRIDGE_DIR=%CD%\src\server\native_bridge
 set BRIDGE_SDK_DIR=%BRIDGE_DIR%\discord_social_sdk

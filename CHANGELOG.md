@@ -6,6 +6,84 @@ All notable user-facing and operator-facing changes are documented here. Version
 
 No unreleased changes.
 
+## [1.26.0] - 2026-08-16
+
+Release 1.26.0 completes the concrete remediation deliverables from the project-wide audit and turns them into repeatable release gates. It also replaces Back Alley Deals' HP-estimate workaround with an encounter lifecycle that matches the client/server relationship.
+
+### Back Alley Deals and encounter authority
+
+- Migrated `JC_Mission2` normal and hard to canonical encounter authority for Mortis Golem (`GreaterBoneGolem`) and Seelie Ravager (`GreaterBoneGolem2`).
+- Added a canonical entity ID, life nonce, active/terminal phase, proxy registry, idempotent event ledger, and reward nonce for each boss life.
+- Made client entities projections of canonical state: damage and healing are intents, while terminal death is irreversible and cannot be undone by a late heal, revive animation, duplicate proxy, or stale packet.
+- Stopped treating cumulative client HP telemetry as a kill. The actual boss destroy signal must arrive with observed combat evidence before a required boss is committed dead.
+- Preserved authored completion ordering: both distinct bosses must die, the room-clear signal must arrive, and the completion cinematic must finish before the win screen becomes eligible.
+- Added reward-once semantics and duplicate-event protection so repeated terminal reports cannot duplicate drops or progression.
+- Added `CANONICAL_ENCOUNTER_AUTHORITY_ENABLED=0` as an emergency rollback to shadow behavior without changing saves.
+- Expanded focused regressions for two proxies, duplicate events, heal-after-death rejection, irreversible terminal state, reward idempotency, early-win prevention, room-clear ordering, and both difficulty variants.
+
+### JSON persistence and recovery
+
+- Added a write-ahead account-creation journal spanning the initial character save and account publication.
+- Startup recovery deterministically completes or rolls back interrupted journal states instead of leaving an account without its save or losing a completed save publication.
+- Retained serialized mutation queues, unique temporary files, file synchronization, atomic replacement, validation, and last-known-good account recovery.
+- Raised persistence stress coverage to 100 concurrent creates plus interleaved updates and injected failures after journal, save, and account-commit stages.
+- Migrated persistence events touched by the remediation to structured, redacted logs.
+
+### Verified backup and restore
+
+- Added `data:backup`, `data:verify-backup`, and `data:restore` commands for accounts, backups, saves, transaction journals, Discord link data, portraits, and channel-link state.
+- Archives contain a byte-count and SHA-256 manifest; verification rejects missing, modified, or undeclared content.
+- Restore requires an explicit offline confirmation, stages replacements, and rolls the original data back if publication fails.
+- Added a restore drill covering successful backup/verify/restore, the offline guard, and tamper detection.
+- Added timestamped scheduled backups with configurable retention and systemd timer/service examples that stop writers, back up, and restart the game.
+
+### Client artifact provenance and deterministic builds
+
+- Added a release manifest for six imported SWF/SWZ artifacts with exact size, SHA-256, Git blob identity, Node version, and FFDec 26.2.1 metadata.
+- Converted all 33 accepted client verifier exceptions into owned, rationalized, time-bounded entries that fail after expiry; eight discrepancies newly exposed by strict 64-bit FFDec verification expire on 2026-10-16.
+- Made ordinary and release builds read-only; patch application remains an explicit maintainer action rather than an implicit prebuild mutation.
+- Release CI verifies the artifact manifest, runs strict FFDec patch verification, repeats the build, and fails if tracked sources or client hashes change.
+- Fixed the verifier's FFDec argument propagation, transient serial retry, unavailable-tool classification, configurable concurrency, and pinned-Java heap contract so strict checks cannot be skipped or confused with patch loss.
+- Documented the provenance boundary: imported artifacts are immutable and reproducible as Git objects, while a rebuild from pristine redistributable upstream originals is not claimed because those originals are unavailable.
+
+### Test and architecture controls
+
+- Added critical-path coverage enforcement for boss authority and JSON persistence, with measured branch/function/line/statement floors.
+- Added a project lint/debt gate that freezes explicit `any`, direct console use, dynamic `require`, and the line counts of the four legacy handlers; new authority modules are held to stricter typed boundaries.
+- Added a 5,000-instance scope-disposal soak proving every registered scope subsystem returns to baseline after repeated idempotent cleanup.
+- Extracted a typed structured logger with correlation context, credential/identity redaction, and deterministic sampling for high-volume combat intents.
+- Added focused release-contract and structured-logging regressions.
+- Recorded monolithic handler decomposition as a controlled incremental program: the release may reduce the budgets but cannot increase them.
+
+### Browser and accessibility acceptance
+
+- Added real Chromium tests for focus retention across live admin snapshots, programmatic selected-state semantics, draft settings retention, failed-save behavior, announcement retry, destructive-action confirmation, and duplicate-request prevention.
+- Added axe WCAG A/AA checks for the operational admin surface.
+- Browser reports are uploaded by CI alongside regression and coverage evidence.
+
+### Release, container, and launcher verification
+
+- Expanded the reusable quality workflow with lint/debt budgets, coverage, browser automation, strict client artifact verification, repeat-build checks, and report uploads.
+- Added a clean-host container job that builds the image, runs it non-root with a read-only root filesystem and only declared data mounts, checks HTTP/game readiness, holds a live socket, and exercises graceful stop.
+- Corrected the container's declared HTTP port from 80 to 8000.
+- Added Windows and macOS launcher smoke jobs for dependency reconciliation.
+- Fixed Node.js 24 Windows dependency installation by invoking npm through `ComSpec`, avoiding `spawnSync npm.cmd EINVAL`.
+- Added launcher smoke mode so CI validates setup without opening FlashBrowser or starting long-lived local services.
+
+### Documentation and operations
+
+- Updated the README with the 1.26 audit status, release highlights, canonical-authority boundary, client provenance boundary, and expanded local verification commands.
+- Updated the remediation matrix with item-level evidence and clear distinctions between implemented gates, repository settings, manual Flash/screen-reader QA, and ongoing incremental migrations.
+- Replaced ad-hoc copy instructions with manifest-verified backup, scheduled retention, staged restore, and emergency encounter rollback procedures.
+- Expanded security guidance for journal-consistent archives, structured-log sensitivity, and client artifact review.
+
+### Compatibility and rollout
+
+- Protocol and character-save formats remain unchanged; this is a backward-compatible minor release.
+- Existing ignored runtime accounts and saves remain in place.
+- Back Alley canonical authority is enabled by configuration for the two authored encounters. Other dungeons retain their existing behavior until migrated with dungeon-specific evidence.
+- Operators should create and verify an archive before upgrading and retain the prior image plus archive for rollback.
+
 ## [1.25.1] - 2026-08-16
 
 ### Documentation

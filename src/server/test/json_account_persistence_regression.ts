@@ -56,16 +56,79 @@ async function main(): Promise<void> {
         }
 
         const adapters = [adapterFor(root), adapterFor(root)];
-        const created = await Promise.all(Array.from({ length: 24 }, (_, index) =>
+        const created = await Promise.all(Array.from({ length: 100 }, (_, index) =>
             adapters[index % adapters.length].createAccount(`concurrent-${index}@example.test`, PASSWORD)
         ));
         const accounts = JSON.parse(await fs.readFile(accountsPath, 'utf8')) as Array<{
             email: string;
             user_id: number;
         }>;
-        assert.equal(accounts.length, 24, 'serialized creates must not lose account records');
-        assert.equal(new Set(accounts.map((account) => account.user_id)).size, 24, 'account IDs must be unique');
-        assert.equal(new Set(created.map((account) => account.user_id)).size, 24, 'callers must receive unique IDs');
+        assert.equal(accounts.length, 100, 'serialized creates must not lose account records');
+        assert.equal(new Set(accounts.map((account) => account.user_id)).size, 100, 'account IDs must be unique');
+        assert.equal(new Set(created.map((account) => account.user_id)).size, 100, 'callers must receive unique IDs');
+
+        await Promise.all([
+            ...Array.from({ length: 20 }, (_, index) => adapters[index % adapters.length].createAccount(
+                `interleaved-${index}@example.test`,
+                PASSWORD
+            )),
+            ...Array.from({ length: 20 }, (_, index) => adapters[index % adapters.length].updateAccountPassword(
+                `concurrent-${index}@example.test`,
+                { ...PASSWORD, passwordHash: (index % 10).toString(16).repeat(128) }
+            ))
+        ]);
+        const interleavedAccounts = JSON.parse(await fs.readFile(accountsPath, 'utf8')) as Array<{
+            email: string;
+            user_id: number;
+        }>;
+        assert.equal(interleavedAccounts.length, 120, 'interleaved creates and updates must retain every record');
+        assert.equal(
+            new Set(interleavedAccounts.map((account) => account.user_id)).size,
+            120,
+            'interleaved mutations must preserve unique IDs'
+        );
+
+        for (const stage of ['after-journal', 'after-save', 'after-account-commit'] as const) {
+            const transactionRoot = await fs.mkdtemp(path.join(os.tmpdir(), `db-json-${stage}-`));
+            try {
+                const transactionAdapter = adapterFor(transactionRoot);
+                JsonAdapter.configureAccountTransactionFaultForTests((observedStage) => {
+                    if (observedStage === stage) {
+                        throw new Error(`injected ${stage} interruption`);
+                    }
+                });
+                await assert.rejects(
+                    () => transactionAdapter.createAccount(`${stage}@example.test`, PASSWORD),
+                    new RegExp(`injected ${stage} interruption`)
+                );
+                JsonAdapter.configureAccountTransactionFaultForTests(null);
+
+                const recoveryAdapter = adapterFor(transactionRoot);
+                const recoveredAccount = await recoveryAdapter.getAccount(`${stage}@example.test`);
+                const committed = stage === 'after-account-commit';
+                assert.equal(Boolean(recoveredAccount), committed, `${stage}: recovery must use account publication as commit point`);
+                const recoveredSavePath = path.join(
+                    transactionRoot,
+                    'data',
+                    'saves',
+                    `${recoveredAccount?.user_id ?? 1}.json`
+                );
+                if (committed) {
+                    await fs.access(recoveredSavePath);
+                } else {
+                    await assert.rejects(() => fs.access(recoveredSavePath), /ENOENT/);
+                }
+                const transactionDir = path.join(transactionRoot, 'data', 'transactions');
+                assert.deepEqual(
+                    await fs.readdir(transactionDir).catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? [] : Promise.reject(error)),
+                    [],
+                    `${stage}: recovery must consume the transaction journal`
+                );
+            } finally {
+                JsonAdapter.configureAccountTransactionFaultForTests(null);
+                await fs.rm(transactionRoot, { recursive: true, force: true });
+            }
+        }
 
         const beforeFailure = await fs.readFile(accountsPath, 'utf8');
         const originalRename = (JsonAdapter as any).renameFile;
@@ -106,6 +169,7 @@ async function main(): Promise<void> {
 
         console.log('json_account_persistence_regression: PASS');
     } finally {
+        JsonAdapter.configureAccountTransactionFaultForTests(null);
         (JsonAdapter as any).renameFile = (fromPath: string, toPath: string) => fs.rename(fromPath, toPath);
         await fs.rm(root, { recursive: true, force: true });
     }

@@ -63,41 +63,47 @@ podman logs --since 10m dungeon-blitz-r
 
 ## Backup and restore
 
-Stop writes before a JSON-mode backup so `Accounts.json` and saves describe the same point in time:
+The archive tool includes accounts, the last-known-good account copy, character saves, unfinished transaction journals, Discord link state, and portraits. Stop writers so the archive represents one point in time, then create and verify it:
 
 ```sh
 podman stop dungeon-blitz-r
 backup="$HOME/backups/dungeon-blitz-r/$(date -u +%Y%m%dT%H%M%SZ)"
-install -d -m 700 "$backup"
-cp -a "$HOME/.local/share/dungeon-blitz-r/Accounts.json" "$backup/"
-cp -a "$HOME/.local/share/dungeon-blitz-r/saves" "$backup/"
-sha256sum "$backup/Accounts.json" "$backup"/saves/*.json > "$backup/SHA256SUMS"
+cd /path/to/dungeon-blitz-r/src/server
+npm run data:backup -- --archive "$backup"
+npm run data:verify-backup -- --archive "$backup"
 podman start dungeon-blitz-r
 ```
 
-Retain encrypted backups on separate storage. Test restore regularly:
+The manifest records every file's byte count and SHA-256 hash; verification rejects missing, changed, or undeclared files. Retain encrypted copies on separate storage. Test restore regularly into a temporary server root first, then perform the production restore while all writers are offline:
 
 ```sh
 podman stop dungeon-blitz-r
-cp -a "$backup/Accounts.json" "$HOME/.local/share/dungeon-blitz-r/Accounts.json"
-rm -rf "$HOME/.local/share/dungeon-blitz-r/saves.restore"
-cp -a "$backup/saves" "$HOME/.local/share/dungeon-blitz-r/saves.restore"
-mv "$HOME/.local/share/dungeon-blitz-r/saves" "$HOME/.local/share/dungeon-blitz-r/saves.before-restore"
-mv "$HOME/.local/share/dungeon-blitz-r/saves.restore" "$HOME/.local/share/dungeon-blitz-r/saves"
+cd /path/to/dungeon-blitz-r/src/server
+npm run data:verify-backup -- --archive "$backup"
+npm run data:restore -- --archive "$backup" --confirm-offline
 podman start dungeon-blitz-r
 ```
 
-After restore, verify `/healthz`, authenticate a representative test account, and load a character before deleting `saves.before-restore`. For Mongo authority, use `mongodump`/`mongorestore` with the same stop-or-consistent-snapshot policy and protect the archive as sensitive data.
+Restore stages every archived path and retains the live files until replacement succeeds; a failed replacement rolls the prior data back. After restore, verify `/healthz`, authenticate a representative test account, and load a character. For Mongo authority, use `mongodump`/`mongorestore` with the same stop-or-consistent-snapshot policy and protect the archive as sensitive data.
+
+For systemd deployments, install `deploy/systemd/dungeon-blitz-backup.service` and `.timer`, adjust paths/environment, then enable the timer. It stops the game service, creates and verifies a timestamped archive, applies retention, and restarts the service:
+
+```sh
+systemctl enable --now dungeon-blitz-backup.timer
+systemctl list-timers dungeon-blitz-backup.timer
+```
 
 ## Upgrade and rollback
 
 1. Back up and verify checksums.
-2. Pull the desired tag and build a versioned image, for example `dungeon-blitz-r:1.25.0`.
+2. Pull the desired tag and build a versioned image, for example `dungeon-blitz-r:1.26.0`.
 3. Stop the old container and start the versioned image with the same explicit data mounts.
 4. Check health, login, character load, and one dungeon transfer.
 5. Keep the old image and pre-upgrade backup for at least two releases.
 
 To roll back, stop the new container, restore the pre-upgrade data only if the release changed its format, and start the prior versioned image. Do not mix a partially migrated account file with older saves.
+
+Back Alley's canonical encounter pilot can be returned to shadow behavior without changing save data by setting `CANONICAL_ENCOUNTER_AUTHORITY_ENABLED=0` and restarting the server. Use this only as an emergency diagnostic rollback and attach the structured `BossAuthority` timeline to the incident.
 
 ## First-run fixture migration
 

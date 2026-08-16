@@ -15,7 +15,7 @@ import { noteDungeonRunBossCutscene, noteDungeonRunEntitySeen } from '../core/Du
 import { areClientsInSameParty, getPartyIdForClient, isClientPartyLeader, sharesRoomIds } from '../core/PartySync';
 import { areClientsInSameLevelScope, getClientLevelScope, getLevelScopeKey, getScopeLevelName } from '../core/LevelScope';
 import { getPartyRuntimeLevelForClient, getScopeRuntimeLevel } from '../core/RuntimeLevel';
-import { clearBossAuthority, noteBossEntity } from '../core/BossAuthority';
+import { clearBossAuthority, noteBossEntity, registerBossAuthorityProxy } from '../core/BossAuthority';
 import { clearOpenBossScene, getOpenBossScene, isRoomBossEntity, markRoomBossEntity } from '../core/RoomBossState';
 import { getBossIdentityKey, getBossIdentityKeys } from '../core/BossCopyCensus';
 import { TutorialDungeonAuthorityEntity, TutorialDungeonMechanics } from '../core/TutorialDungeonMechanics';
@@ -1064,6 +1064,8 @@ export class EntityHandler {
             localId,
             localId === canonicalId ? 'server_authority_same_id_attach' : 'server_authority_proxy_attach'
         );
+        EntityHandler.adoptBossAuthority(getClientLevelScope(client), canonical);
+        registerBossAuthorityProxy(getClientLevelScope(client), canonical, client.token, localId);
         if (!EntityHandler.usesCanonicalVisibleServerAuthorityHostiles(levelName)) {
             if (localId !== canonicalId) {
                 EntityHandler.rememberEntityAlias(client, localId, canonicalId);

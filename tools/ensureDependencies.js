@@ -16,8 +16,9 @@ function reconcile(projectDirectory) {
         return;
     }
     process.stdout.write(`Reconciling ${path.relative(process.cwd(), root) || 'root'} dependencies...\n`);
-    const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-    const result = spawnSync(npm, ['install', '--include=dev'], { cwd: root, stdio: 'inherit' });
+    const result = process.platform === 'win32'
+        ? spawnSync(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', 'npm install --include=dev'], { cwd: root, stdio: 'inherit' })
+        : spawnSync('npm', ['install', '--include=dev'], { cwd: root, stdio: 'inherit' });
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(`npm install failed with exit code ${result.status}`);
     fs.writeFileSync(markerPath, `${lockHash}\n`);

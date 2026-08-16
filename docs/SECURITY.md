@@ -22,5 +22,8 @@ Maintainers should acknowledge a report within seven days, provide an initial as
 - Keep the game and admin APIs behind a firewall or authenticated reverse proxy when exposed beyond localhost.
 - Never expose the admin proxy without a long random `ADMIN_CONTROL_SECRET`.
 - Back up accounts and saves before upgrades; follow [HOSTING.md](HOSTING.md) for restore and rollback.
+- Use the manifest-verified archive commands rather than copying only `Accounts.json`; unfinished transaction journals, linked identities, and saves must remain consistent.
 - Supply Discord, database, and admin secrets through environment variables or a secret manager, never source control.
+- Structured persistence and encounter logs redact keys containing emails, passwords, verifiers, authorization values, cookies, secrets, and tokens. Treat remaining character names and operational IDs as sensitive and restrict log retention/access.
+- Release builds verify the exact imported client artifact hashes and reject expired patch exceptions. Do not replace an SWF/SWZ without updating provenance through review.
 - `/healthz` is safe for readiness probes. `/debug-path` is disabled unless explicitly enabled outside production.

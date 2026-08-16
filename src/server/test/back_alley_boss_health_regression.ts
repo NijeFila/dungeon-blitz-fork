@@ -244,31 +244,23 @@ async function testDamagedClientAuthorityBossDestroyIsFinal(
         );
         assert.equal(boss.playerDamageContributed, true, `${levelName}: boss damage was not recorded`);
 
-        if (!completeFromTelemetry) {
-            await CombatHandler.handleEntityDestroy(client as never, buildDestroyEntityPayload(boss.id));
+        if (completeFromTelemetry) {
+            assert.equal(boss.dead, false, `${levelName}: estimated HP telemetry declared the visible boss dead`);
+            assert.equal(boss.destroyed, false, `${levelName}: estimated HP telemetry destroyed the visible boss`);
+            assert.ok(boss.hp > 0, `${levelName}: estimated HP telemetry zeroed canonical HP before defeat`);
+            return;
         }
+
+        await CombatHandler.handleEntityDestroy(client as never, buildDestroyEntityPayload(boss.id));
 
         assert.equal(boss.hp, 0, `${levelName}: boss destroy was corrected back to positive HP`);
         assert.equal(boss.dead, true, `${levelName}: damaged boss destroy did not commit death`);
         assert.equal(boss.destroyed, true, `${levelName}: damaged boss was allowed to respawn`);
-        if (completeFromTelemetry) {
-            assert.equal(
-                sent.some((packet) => packet.packetId === 0x07),
-                true,
-                `${levelName}: verified HP pool did not send the boss dead state`
-            );
-            assert.equal(
-                sent.some((packet) => packet.packetId === 0x0D),
-                false,
-                `${levelName}: verified boss was removed before the room script could observe its dead state`
-            );
-        } else {
-            assert.equal(
-                sent.some((packet) => packet.packetId === 0x07),
-                false,
-                `${levelName}: server sent an alive-state correction for the defeated boss`
-            );
-        }
+        assert.equal(
+            sent.some((packet) => packet.packetId === 0x07),
+            false,
+            `${levelName}: server sent an alive-state correction for the defeated boss`
+        );
     } finally {
         DungeonCompletionSystem.reset(scope);
         GlobalState.sessionsByToken.delete(token);
@@ -325,10 +317,8 @@ async function testFullBackAlleyEncounterCompletes(): Promise<void> {
     GlobalState.sessionsByToken.set(token, client as never);
 
     try {
-        // Exhausting an individual boss's verified health pool must commit that
-        // boss's terminal death immediately. Dungeon victory remains separately
-        // gated by both boss deaths, the authored room-clear signal, and the
-        // post-boss cinematic.
+        // Estimated HP telemetry is only an observation: the Flash encounter owns
+        // the visible defeat animation and emits the destroy transition after it.
         for (const boss of bosses) {
             (CombatHandler as any).recordClientHostileHpDelta(
                 client,
@@ -338,6 +328,9 @@ async function testFullBackAlleyEncounterCompletes(): Promise<void> {
                 boss,
                 -boss.maxHp
             );
+            assert.equal(boss.destroyed, false, `${boss.name}: telemetry ended the boss before its defeat signal`);
+            assert.equal(boss.playerDamageContributed, true, `${boss.name}: player damage evidence was not retained`);
+            await CombatHandler.handleEntityDestroy(client as never, buildDestroyEntityPayload(boss.id));
         }
 
         assert.equal(mortis.destroyed, true, 'Mortis did not remain permanently dead after lethal damage');
@@ -387,6 +380,30 @@ async function main(): Promise<void> {
         true,
         'Back Alley Deals Hard must reject client-side boss healing'
     );
+    for (const levelName of ['JC_Mission2', 'JC_Mission2Hard']) {
+        assert.equal(
+            DungeonCompletionConditions.requiresBossDefeatSignal(levelName),
+            true,
+            `${levelName}: visible defeat signal must be the terminal-death authority`
+        );
+        assert.equal(
+            DungeonCompletionConditions.allowsDerivedBossHpCompletion(levelName),
+            false,
+            `${levelName}: estimated HP must not kill a still-visible boss`
+        );
+        assert.equal(
+            DungeonCompletionConditions.getEncounterAuthorityMode(levelName),
+            'canonical',
+            `${levelName}: canonical encounter lifecycle must remain enabled`
+        );
+        process.env.CANONICAL_ENCOUNTER_AUTHORITY_ENABLED = 'false';
+        assert.equal(
+            DungeonCompletionConditions.getEncounterAuthorityMode(levelName),
+            'shadow',
+            `${levelName}: the emergency rollback flag must restore shadow authority`
+        );
+        delete process.env.CANONICAL_ENCOUNTER_AUTHORITY_ENABLED;
+    }
     assert.equal(
         DungeonCompletionConditions.acceptsRoomBossClearSignal('JC_Mission2'),
         true,

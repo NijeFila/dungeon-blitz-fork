@@ -2,27 +2,31 @@
 
 This plan implements the findings in [AUDIT.md](AUDIT.md). It is ordered by risk reduction and dependency, not by convenience. Each work item has an owner role, evidence gate, rollout, and rollback expectation. No item is complete merely because code was merged.
 
-## Implementation status after 1.25.0
+## Implementation status for 1.26.0
 
-This table records implementation status, not merely whether code changed. “Partial” means at least one acceptance criterion remains unproven.
+This table records implementation and its evidence gate, not merely whether code changed. GitHub-hosted jobs are considered operationally proven only after the pushed workflow completes successfully.
 
-| Finding | Status | 1.25 evidence / remaining gate |
+| Finding | Status | 1.26 evidence / boundary |
 | --- | --- | --- |
-| `TEST-01` | Implemented | Back Alley normal/hard focused sequence and the complete 100-program regression suite pass. |
-| `DATA-01` | Partial | Serialized atomic replacement, validation, backup recovery, concurrency, and injected-failure coverage are present. The audit's 100-operation stress target and recoverable account-plus-save journal remain open. |
+| `TEST-01` | Implemented | Back Alley normal/hard focused sequences are release-gated and preserve authored room-clear/cinematic ordering. |
+| `DATA-01` | Implemented | Serialized atomic replacement, validation, last-known-good recovery, a write-ahead account-plus-save journal, deterministic startup recovery, 100 concurrent creates, interleaved updates, and injected failures at every commit stage are covered. |
 | `DATA-02` | Implemented at repository tip | Runtime authority is ignored; only the documented synthetic fixture is tracked; existing local data is preserved. Historical purge remains conditional on confirmed real identifiers. |
-| `REL-01` | Partial | Release is explicit and depends on the reusable build/test/patch/audit/artifact quality workflow. Deliberate-failure exercises and repository branch-protection enforcement remain to be proven on GitHub. |
-| `STATE-01` | Partial | Central idempotent scope disposal and focused tests exist; the requested thousands-of-instance heap soak remains unrun. |
-| `OPS-02` / `OPS-03` | Partial | Non-root image, read-only deployment contract, component readiness, accurate ports, debug guard, graceful stop, and corrected build context are present. A clean-host container build/run smoke test remains unproven. |
+| `REL-01` | Implemented in workflow | Release is explicit, consumes the tested artifact, and depends on reusable quality gates. Branch protection remains a repository setting, not a source-code claim. |
+| `STATE-01` | Implemented | Central idempotent disposal is covered across 5,000 unique level scopes and returns every registered subsystem to its baseline cardinality. |
+| `OPS-02` / `OPS-03` | Implemented in workflow | The non-root, read-only image declares accurate TCP ports and writable mounts; readiness and graceful stop with a live socket are exercised by the clean-host container job. |
 | `DEP-01` | Implemented | Both manifests are monitored; the audited advisory is resolved; CI distinguishes production audit policy. |
-| `WEB-01`–`WEB-09` | Partial | Stable keyed rendering, drafts, confirmations, pending guards, contrast/type/targets, navigation, full OAuth pages, offline fonts, viewport, fallback, and autocomplete are present. The browser/assistive-technology acceptance checks remain unautomated. |
-| `LAUNCH-01` / `LAUNCH-02` | Partial | Readiness-gated Windows FlashBrowser launch and lockfile-hash dependency reconciliation are shared across launchers. Clean Windows/macOS end-to-end launcher tests remain unrun. |
+| `WEB-01`–`WEB-09` | Implemented | Stable keyed rendering, drafts, confirmations, pending guards, contrast/type/targets, navigation, full OAuth pages, offline fonts, viewport, fallback, and autocomplete are exercised in real Chromium; axe enforces WCAG A/AA rules. Manual Flash and screen-reader checks remain release QA, not an automated claim. |
+| `LAUNCH-01` / `LAUNCH-02` | Implemented | Readiness-gated Windows FlashBrowser launch and lockfile-hash dependency reconciliation are shared across launchers; noninteractive dependency paths run on Windows and macOS CI. |
 | `DOC-01` | Implemented | README links tracked guides; security, hosting, admin, recovery, rollback, audit, plan, and changelog are documented. |
-| `AUTH-01` | Partial | Back Alley terminal-death authority is corrected; the canonical lifecycle has not been migrated project-wide with shadow telemetry and rollback flags. |
-| `CLIENT-01` | Partial | Verification is read-only and strict CI provisions FFDec; the known baseline, immutable originals, patch manifest, and deterministic rebuild hashes remain open. |
-| `TEST-02` | Partial | Timeouts, sharding, JUnit, and admin UI contracts exist; coverage, lint/format, and real browser automation remain open. |
-| `OPS-01` | Partial | Procedures are documented; scheduled backups and a recorded restore/rollback drill are operator work. |
-| `ARCH-01` / `ARCH-02` | Open | Handler decomposition, typed protocol adapters, and structured/redacted logging require incremental releases and were not represented as completed. |
+| `AUTH-01` | Production pilot implemented | Back Alley uses a canonical ID/life nonce/phase record, proxy registration, idempotent terminal events, reward-once semantics, sampled telemetry, and `CANONICAL_ENCOUNTER_AUTHORITY_ENABLED=0` rollback. Migration remains deliberately dungeon-by-dungeon per the audit's rollout rule. |
+| `CLIENT-01` | Implemented with provenance boundary | Six imported artifacts have pinned hashes, sizes, Git object identities, toolchain metadata, and 33 owned/time-bounded verifier exceptions. Eight strict-FFDec discrepancies have the shorter 2026-10-16 deadline. Builds are read-only and repeated in CI. Pristine redistributable upstream originals are unavailable, so no from-original-source rebuild is claimed. |
+| `TEST-02` | Implemented | The runner provides timeout/JUnit/sharding; critical authority/persistence modules have enforced coverage floors; debt budgets prevent new `any`, console, dynamic-require, or handler-size growth; Chromium/axe tests cover the admin acceptance paths. |
+| `OPS-01` | Implemented | Backup, manifest verification, staged offline restore, tamper rejection, scheduled retention, and a systemd stop/backup/restart unit are supplied; the archive regression performs a restore drill. |
+| `ARCH-01` / `ARCH-02` | Controlled incremental program | Canonical boss authority, structured logging, and persistence transaction logic are extracted and typed. Explicit budgets prevent the four legacy handlers and untyped/logging debt from growing while later releases continue decomposition. |
+
+### Completion interpretation
+
+All concrete audit defects have an implementation, automated gate, operator control, or explicitly documented provenance boundary in 1.26.0. “Implemented” does not mean the legacy server has been rewritten: the original plan explicitly requires incremental dungeon migration and handler extraction. The two continuing programs are expansion of canonical authority beyond the Back Alley pilot and reduction below the frozen legacy architecture budgets.
 
 ## Operating rules
 

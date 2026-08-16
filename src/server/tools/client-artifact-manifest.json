@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "toolchain": {
+    "ffdec": "26.2.1",
+    "node": "24"
+  },
+  "provenance": "Imported patched artifacts retained as immutable Git objects; hashes are the release contract until legally redistributable pristine originals are available.",
+  "artifacts": [
+    { "path": "p/cbp/DungeonBlitz.swf", "bytes": 829499, "sha256": "4b53d80477c0e510bceb3ac929346c5f013052024bce25aa85889ef284d3b690", "gitBlob": "cf4b45365e1ca3fa119ae4af8bd30baf6614f213" },
+    { "path": "p/cbq/Game.swz", "bytes": 282236, "sha256": "e7086ae74d4258432d5b52a05e0f6aab2174248a03b4d8bb775af42d77eb5dba", "gitBlob": "26da1b66664dced1d6694e7fd7d19ed6640812c9" },
+    { "path": "p/cbp/LevelsJC.swf", "bytes": 5192682, "sha256": "9ad1cd1d7ba0fbdba4fe43ff03eaab4ec12251865606a0d2e58d0f4d6a20f84f", "gitBlob": "b3cbc96429962647ffe89474877e4ba87db7b812" },
+    { "path": "p/cbp/LevelsAC.swf", "bytes": 3420161, "sha256": "9e8f8ad788bbd4cd20ffab8a0a2c78a9807235ca9f2c658b5e756930179f02f4", "gitBlob": "d48849e4a13f2faab19d7bf1bc93dbf370e18e47" },
+    { "path": "p/cbp/LevelsNR.swf", "bytes": 2717102, "sha256": "d0c5995aedfe7232cc580f22e8705a25d10fa729a4a3d1195d3412a354d2bce9", "gitBlob": "b0cbb291dd65c9f6fdafab14c7d314ed20185535" },
+    { "path": "p/cbp/LevelsHome.swf", "bytes": 6662342, "sha256": "cd3ed08c96c7163e84ffcbd523b202fd53bc997a6c5bbc1bb400c50e4a281fdc", "gitBlob": "e980f805401533f350ffabfc2f866dd499f91ef7" }
+  ]
+}

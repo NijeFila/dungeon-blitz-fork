@@ -1,0 +1,13 @@
+[Unit]
+Description=Dungeon Blitz verified runtime-data backup
+After=dungeon-blitz.service
+
+[Service]
+Type=oneshot
+UMask=0077
+Environment=DUNGEON_BLITZ_BACKUP_DIR=/var/backups/dungeon-blitz
+Environment=DUNGEON_BLITZ_BACKUP_RETENTION_DAYS=14
+WorkingDirectory=/opt/games/dungeon-blitz-r/src/server
+ExecStartPre=/usr/bin/systemctl stop dungeon-blitz.service
+ExecStart=/usr/bin/node tools/scheduledRuntimeBackup.js
+ExecStopPost=/usr/bin/systemctl start dungeon-blitz.service

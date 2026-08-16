@@ -3,6 +3,38 @@ import { DungeonCompletionConditions } from './DungeonCompletionConditions';
 import { getScopeLevelName } from './LevelScope';
 import { getScopeRuntimeLevel, clearScopeRuntimeLevel } from './RuntimeLevel';
 import { isRoomBossEntity } from './RoomBossState';
+import { EntityState } from './Entity';
+import type { EncounterAuthorityMode } from './DungeonCompletionTypes';
+import { StructuredLogger } from './StructuredLogger';
+
+const encounterLog = new StructuredLogger('BossAuthority');
+
+export type CanonicalEntityId = number & { readonly __canonicalEntityId: unique symbol };
+export type EncounterLifeNonce = number & { readonly __encounterLifeNonce: unique symbol };
+export type BossAuthorityPhase = 'active' | 'terminal';
+
+export type BossAuthorityEntity = Record<string, unknown> & {
+    id?: number;
+    name?: string;
+    EntName?: string;
+    isPlayer?: boolean;
+    team?: number;
+    level?: number;
+    maxHp?: number;
+    hp?: number;
+    dead?: boolean;
+    destroyed?: boolean;
+    entState?: number;
+    roomBossName?: string;
+    bossAuthorityKey?: string;
+    lifeNonce?: number;
+};
+
+export type BossAuthorityEvent =
+    | { type: 'damage'; eventId: string; token: number; amount: number; at: number }
+    | { type: 'heal'; eventId: string; token: number; amount: number; at: number; accepted: boolean }
+    | { type: 'terminal-death'; eventId: string; token: number; at: number }
+    | { type: 'reward-granted'; eventId: string; token: number; at: number };
 
 // One dungeon boss, one record, for the whole level scope.
 //
@@ -23,6 +55,14 @@ export type BossAuthorityRecord = {
     hp: number;
     dead: boolean;
     deadAt: number;
+    canonicalEntityId: CanonicalEntityId;
+    lifeNonce: EncounterLifeNonce;
+    phase: BossAuthorityPhase;
+    authorityMode: EncounterAuthorityMode;
+    proxyIdsByToken: Map<number, Set<number>>;
+    appliedEventIds: Set<string>;
+    rewardNonces: Set<string>;
+    events: BossAuthorityEvent[];
     // Damage reported per session token. Each client reports only what it dealt,
     // so these sum; keyed by token so a reconnecting player cannot double-count.
     reportedDamageByToken: Map<number, number>;
@@ -43,7 +83,7 @@ function roundPositive(value: unknown, fallback: number = 0): number {
 // The name the record is keyed by. Falls back to the room-boss marker so a boss
 // the completion catalog does not name still gets one shared pool rather than
 // one per viewer.
-export function getBossAuthorityKey(levelScope: string | null | undefined, entity: any): string {
+export function getBossAuthorityKey(levelScope: string | null | undefined, entity: BossAuthorityEntity): string {
     const scopeKey = normalizeScope(levelScope);
     if (!scopeKey || !entity || entity.isPlayer) {
         return '';
@@ -68,7 +108,7 @@ export function getBossAuthorityKey(levelScope: string | null | undefined, entit
 
 export function getBossAuthorityRecord(
     levelScope: string | null | undefined,
-    entity: any
+    entity: BossAuthorityEntity
 ): BossAuthorityRecord | null {
     const scopeKey = normalizeScope(levelScope);
     const key = getBossAuthorityKey(scopeKey, entity);
@@ -81,8 +121,8 @@ export function getBossAuthorityRecord(
 // starting a fresh one at full health.
 export function noteBossEntity(
     levelScope: string | null | undefined,
-    entity: any,
-    estimateMaxHp: (entity: any, levelScope: string) => number
+    entity: BossAuthorityEntity,
+    estimateMaxHp: (entity: BossAuthorityEntity, levelScope: string) => number
 ): BossAuthorityRecord | null {
     const scopeKey = normalizeScope(levelScope);
     const key = getBossAuthorityKey(scopeKey, entity);
@@ -117,9 +157,25 @@ export function noteBossEntity(
             hp: maxHp,
             dead: false,
             deadAt: 0,
+            canonicalEntityId: roundPositive(entity.id, 0) as CanonicalEntityId,
+            lifeNonce: Math.max(0, Math.round(Number(entity.lifeNonce ?? 0))) as EncounterLifeNonce,
+            phase: 'active',
+            authorityMode: DungeonCompletionConditions.getEncounterAuthorityMode(getScopeLevelName(scopeKey)),
+            proxyIdsByToken: new Map<number, Set<number>>(),
+            appliedEventIds: new Set<string>(),
+            rewardNonces: new Set<string>(),
+            events: [],
             reportedDamageByToken: new Map<number, number>()
         };
         scopeRecords.set(key, record);
+        encounterLog.info('encounter.created', {
+            levelScope: scopeKey,
+            canonicalEntityId: record.canonicalEntityId,
+            canonicalName: record.canonicalName,
+            lifeNonce: record.lifeNonce,
+            authorityMode: record.authorityMode,
+            maxHp: record.maxHp
+        });
     }
 
     applyBossAuthorityToEntity(record, entity);
@@ -133,15 +189,23 @@ export function noteBossEntity(
 // so the record follows their arithmetic rather than overriding it. What it
 // does own is the level every copy is scaled at, and the fact of the death,
 // because those are the two things that were previously decided per viewer.
-export function applyBossAuthorityToEntity(record: BossAuthorityRecord, entity: any): void {
+export function applyBossAuthorityToEntity(record: BossAuthorityRecord, entity: BossAuthorityEntity): void {
     if (!entity || typeof entity !== 'object') {
         return;
     }
 
     entity.level = record.level;
     entity.bossAuthorityKey = record.canonicalName;
+    if (record.authorityMode === 'canonical') {
+        entity.maxHp = record.maxHp;
+        entity.hp = record.hp;
+    }
     if (record.dead) {
         entity.dead = true;
+        if (record.authorityMode === 'canonical') {
+            entity.destroyed = true;
+            entity.entState = EntityState.DEAD;
+        }
         entity.playerDamageContributed = true;
         entity.clientDefeatVerified = true;
     }
@@ -154,9 +218,10 @@ export function applyBossAuthorityToEntity(record: BossAuthorityRecord, entity: 
 // those deltas blindly drained the pool several times over in a full party.
 export function reportBossDamage(
     levelScope: string | null | undefined,
-    entity: any,
+    entity: BossAuthorityEntity,
     token: number,
-    damage: number
+    damage: number,
+    eventId: string = ''
 ): { record: BossAuthorityRecord; hp: number; killed: boolean } | null {
     const record = getBossAuthorityRecord(levelScope, entity);
     if (!record) {
@@ -165,9 +230,23 @@ export function reportBossDamage(
 
     const appliedDamage = Math.max(0, Math.round(Number(damage) || 0));
     const sourceToken = Math.max(0, Math.round(Number(token) || 0));
+    const normalizedEventId = String(eventId ?? '').trim();
+    if (normalizedEventId && record.appliedEventIds.has(normalizedEventId)) {
+        return { record, hp: record.hp, killed: false };
+    }
+    if (normalizedEventId) {
+        record.appliedEventIds.add(normalizedEventId);
+    }
     if (appliedDamage > 0) {
         const previous = Math.max(0, Math.round(Number(record.reportedDamageByToken.get(sourceToken) ?? 0)));
         record.reportedDamageByToken.set(sourceToken, Math.min(record.maxHp, previous + appliedDamage));
+        record.events.push({
+            type: 'damage',
+            eventId: normalizedEventId || `damage:${sourceToken}:${record.events.length + 1}`,
+            token: sourceToken,
+            amount: appliedDamage,
+            at: Date.now()
+        });
     }
 
     let totalReported = 0;
@@ -180,6 +259,19 @@ export function reportBossDamage(
     if (record.hp <= 0 && !record.dead) {
         record.dead = true;
         record.deadAt = Date.now();
+        record.phase = 'terminal';
+    }
+    if (appliedDamage > 0) {
+        encounterLog.sampledDebug('intent.damage_applied', eventId || `${record.lifeNonce}:${totalReported}`, 0.1, {
+            levelScope: record.levelScope,
+            canonicalEntityId: record.canonicalEntityId,
+            lifeNonce: record.lifeNonce,
+            authorityMode: record.authorityMode,
+            token: sourceToken,
+            eventId: normalizedEventId,
+            amount: appliedDamage,
+            hp: record.hp
+        });
     }
 
     applyBossAuthorityToEntity(record, entity);
@@ -191,7 +283,7 @@ export function reportBossDamage(
 // viewers the copy sweep never matched.
 export function adoptBossAuthorityHealth(
     levelScope: string | null | undefined,
-    entity: any,
+    entity: BossAuthorityEntity,
     currentHp: number,
     maxHp: number
 ): BossAuthorityRecord | null {
@@ -200,12 +292,19 @@ export function adoptBossAuthorityHealth(
         return null;
     }
 
+    if (record.phase === 'terminal') {
+        applyBossAuthorityToEntity(record, entity);
+        return record;
+    }
+
     record.maxHp = Math.max(1, Math.round(Number(maxHp) || record.maxHp));
     record.hp = Math.max(0, Math.min(record.maxHp, Math.round(Number(currentHp) || 0)));
     if (record.hp <= 0 && !record.dead) {
         record.dead = true;
         record.deadAt = Date.now();
+        record.phase = 'terminal';
     }
+    applyBossAuthorityToEntity(record, entity);
     return record;
 }
 
@@ -222,7 +321,7 @@ export function syncBossAuthorityCopies(
     }
 
     let synced = 0;
-    const stamp = (candidate: any): void => {
+    const stamp = (candidate: BossAuthorityEntity): void => {
         // Cheap rejects first. Resolving a canonical boss name clones a catalog
         // entry, and this sweep runs on every boss health tick across every
         // session's entity map — the overwhelming majority of what it walks is
@@ -255,15 +354,155 @@ export function syncBossAuthorityCopies(
     return synced;
 }
 
-export function isBossAuthorityDead(levelScope: string | null | undefined, entity: any): boolean {
+export function isBossAuthorityDead(levelScope: string | null | undefined, entity: BossAuthorityEntity): boolean {
     return Boolean(getBossAuthorityRecord(levelScope, entity)?.dead);
 }
 
 // True once the scope owns this boss's pool, which is the condition the combat
 // paths use to decide they may commit the kill themselves instead of waiting
 // for one client's defeat signal.
-export function hasBossAuthorityPool(levelScope: string | null | undefined, entity: any): boolean {
+export function hasBossAuthorityPool(levelScope: string | null | undefined, entity: BossAuthorityEntity): boolean {
     return Boolean(getBossAuthorityRecord(levelScope, entity));
+}
+
+export function registerBossAuthorityProxy(
+    levelScope: string | null | undefined,
+    entity: BossAuthorityEntity,
+    token: number,
+    localEntityId: number
+): BossAuthorityRecord | null {
+    const record = getBossAuthorityRecord(levelScope, entity);
+    if (!record) {
+        return null;
+    }
+    const sourceToken = Math.max(0, Math.round(Number(token) || 0));
+    const proxyId = Math.max(0, Math.round(Number(localEntityId) || 0));
+    if (sourceToken > 0 && proxyId > 0) {
+        const proxyIds = record.proxyIdsByToken.get(sourceToken) ?? new Set<number>();
+        proxyIds.add(proxyId);
+        record.proxyIdsByToken.set(sourceToken, proxyIds);
+    }
+    applyBossAuthorityToEntity(record, entity);
+    return record;
+}
+
+export function reportBossHealIntent(
+    levelScope: string | null | undefined,
+    entity: BossAuthorityEntity,
+    token: number,
+    amount: number,
+    eventId: string,
+    allowHealing: boolean
+): { record: BossAuthorityRecord; accepted: boolean } | null {
+    const record = getBossAuthorityRecord(levelScope, entity);
+    if (!record) {
+        return null;
+    }
+    const normalizedEventId = String(eventId ?? '').trim();
+    if (normalizedEventId && record.appliedEventIds.has(normalizedEventId)) {
+        return { record, accepted: false };
+    }
+    if (normalizedEventId) {
+        record.appliedEventIds.add(normalizedEventId);
+    }
+    const healAmount = Math.max(0, Math.round(Number(amount) || 0));
+    const accepted = Boolean(allowHealing && record.phase === 'active' && healAmount > 0);
+    if (accepted) {
+        record.hp = Math.min(record.maxHp, record.hp + healAmount);
+    }
+    record.events.push({
+        type: 'heal',
+        eventId: normalizedEventId || `heal:${token}:${record.events.length + 1}`,
+        token: Math.max(0, Math.round(Number(token) || 0)),
+        amount: healAmount,
+        at: Date.now(),
+        accepted
+    });
+    encounterLog.sampledDebug('intent.heal_observed', `${record.lifeNonce}:${record.events.length}`, 0.1, {
+        levelScope: record.levelScope,
+        canonicalEntityId: record.canonicalEntityId,
+        lifeNonce: record.lifeNonce,
+        authorityMode: record.authorityMode,
+        token,
+        eventId: normalizedEventId,
+        amount: healAmount,
+        accepted,
+        hp: record.hp
+    });
+    applyBossAuthorityToEntity(record, entity);
+    return { record, accepted };
+}
+
+export function markBossAuthorityTerminalDeath(
+    levelScope: string | null | undefined,
+    entity: BossAuthorityEntity,
+    token: number,
+    eventId: string
+): { record: BossAuthorityRecord; transitioned: boolean } | null {
+    const record = getBossAuthorityRecord(levelScope, entity);
+    if (!record) {
+        return null;
+    }
+    const normalizedEventId = String(eventId ?? '').trim();
+    if (normalizedEventId && record.appliedEventIds.has(normalizedEventId)) {
+        return { record, transitioned: false };
+    }
+    if (normalizedEventId) {
+        record.appliedEventIds.add(normalizedEventId);
+    }
+    const transitioned = record.phase !== 'terminal';
+    if (transitioned) {
+        record.phase = 'terminal';
+        record.dead = true;
+        record.hp = 0;
+        record.deadAt = Date.now();
+        record.events.push({
+            type: 'terminal-death',
+            eventId: normalizedEventId || `terminal:${token}:${record.events.length + 1}`,
+            token: Math.max(0, Math.round(Number(token) || 0)),
+            at: record.deadAt
+        });
+        encounterLog.info('encounter.terminal', {
+            levelScope: record.levelScope,
+            canonicalEntityId: record.canonicalEntityId,
+            canonicalName: record.canonicalName,
+            lifeNonce: record.lifeNonce,
+            authorityMode: record.authorityMode,
+            token,
+            eventId: normalizedEventId
+        });
+    }
+    applyBossAuthorityToEntity(record, entity);
+    syncBossAuthorityCopies(levelScope, record);
+    return { record, transitioned };
+}
+
+export function grantBossAuthorityRewardOnce(
+    levelScope: string | null | undefined,
+    entity: BossAuthorityEntity,
+    token: number,
+    rewardNonce: string
+): boolean {
+    const record = getBossAuthorityRecord(levelScope, entity);
+    const nonce = String(rewardNonce ?? '').trim();
+    if (!record || record.phase !== 'terminal' || !nonce || record.rewardNonces.has(nonce)) {
+        return false;
+    }
+    record.rewardNonces.add(nonce);
+    record.events.push({
+        type: 'reward-granted',
+        eventId: `reward:${nonce}`,
+        token: Math.max(0, Math.round(Number(token) || 0)),
+        at: Date.now()
+    });
+    encounterLog.info('reward.granted', {
+        levelScope: record.levelScope,
+        canonicalEntityId: record.canonicalEntityId,
+        lifeNonce: record.lifeNonce,
+        token,
+        rewardNonce: nonce
+    });
+    return true;
 }
 
 export function getBossAuthorityRecordsForScope(

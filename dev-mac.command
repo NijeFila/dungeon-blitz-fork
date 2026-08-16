@@ -187,7 +187,9 @@ trap cleanup_flashbrowser_watcher EXIT
 echo "Dungeon Blitz (local dev server)"
 echo
 
-update_from_main
+if [[ "${LAUNCHER_SMOKE_TEST:-false}" != "true" ]]; then
+  update_from_main
+fi
 
 if ! command -v node >/dev/null 2>&1; then
   echo "ERROR: Node.js is not installed or not on PATH."
@@ -215,6 +217,10 @@ if ! node tools/ensureDependencies.js . src/server; then
   exit 1
 fi
 echo
+if [[ "${LAUNCHER_SMOKE_TEST:-false}" == "true" ]]; then
+  echo "Launcher smoke test passed."
+  exit 0
+fi
 
 BRIDGE_DIR="$ROOT_DIR/src/server/native_bridge"
 BRIDGE_SDK_DIR="$BRIDGE_DIR/discord_social_sdk"

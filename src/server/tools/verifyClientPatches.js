@@ -14,7 +14,10 @@ const scriptsDir = path.resolve(__dirname, '..', 'scripts');
 const serverDir = path.resolve(__dirname, '..');
 // Deploys run this on the live box while players are connected, so leave a core for the game
 // server rather than saturating every one of them for the ~2 minutes the sweep takes.
-const concurrency = Math.max(1, Math.min(8, os.cpus().length - 1));
+const requestedConcurrency = Number.parseInt(process.env.VERIFY_CLIENT_PATCHES_CONCURRENCY || '', 10);
+const concurrency = Number.isFinite(requestedConcurrency)
+    ? Math.max(1, Math.min(8, requestedConcurrency))
+    : Math.max(1, Math.min(8, os.cpus().length - 1));
 const immutableRoots = [
     path.resolve(serverDir, '..', 'client', 'content'),
     path.resolve(serverDir, 'data')
@@ -64,10 +67,15 @@ function discoverVerifiableScripts() {
 
 function runVerify(name) {
     const isTypeScript = name.endsWith('.ts');
+    const scriptPath = path.join(scriptsDir, name);
+    const source = fs.readFileSync(scriptPath, 'utf8');
     const command = process.execPath;
     const args = isTypeScript
         ? ['-r', 'ts-node/register', path.join('scripts', name), '--verify']
         : [path.join('scripts', name), '--verify'];
+    if (process.env.FFDEC_PATH && source.includes('--ffdec')) {
+        args.push('--ffdec', process.env.FFDEC_PATH);
+    }
 
     return new Promise((resolve) => {
         execFile(command, args, { cwd: serverDir, maxBuffer: 32 * 1024 * 1024 }, (error, stdout, stderr) => {
@@ -75,7 +83,7 @@ function runVerify(name) {
             // Some verifiers shell out to FFDec to disassemble Levels*.swz. A missing FFDec means
             // the check could not run at all, which is not the same as the patch being gone --
             // report it separately rather than failing a build over a missing local tool.
-            const unavailable = Boolean(error) && /FFDec not found|ffdec/i.test(output);
+            const unavailable = Boolean(error) && /FFDec (?:was )?not found|no usable FFDec|spawn(?:Sync)?[^\n]*ffdec[^\n]*(?:ENOENT|EINVAL)|cannot find[^\n]*ffdec(?:\.exe|\.bat|\.sh|\.jar)/i.test(output);
             resolve({
                 name,
                 ok: !error,
@@ -119,13 +127,13 @@ async function main() {
     // (destroy-entity-without-brain, matching the `revert-destroy-brainless` client revision),
     // others are genuinely dropped. Failing the build on those would block every build before
     // anyone could triage them, so the gate only reacts to changes against that baseline.
-    const baseline = new Set(loadBaseline());
+    const baseline = new Set(loadBaseline().map((entry) => typeof entry === 'string' ? entry : entry.name));
 
     // Under concurrency JPEXS' decompiler worker can time out (it drops a com.jpexs stack trace and
     // a truncated .as export), which makes a patch that is actually present verify as missing.
     // Re-check anything we are about to call lost one at a time before believing it: a starved
     // decompiler passes on the second look, a real loss still fails.
-    const suspects = results.filter((result) => !result.ok && !result.skipped && !baseline.has(result.name));
+    const suspects = results.filter((result) => !result.ok && (result.skipped || !baseline.has(result.name)));
     if (suspects.length > 0) {
         console.warn(`[verify-patches] ${suspects.length} patch(es) failed; re-checking them serially...`);
         for (const suspect of suspects) {

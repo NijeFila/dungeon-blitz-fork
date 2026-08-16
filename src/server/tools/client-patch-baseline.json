@@ -1,31 +1,204 @@
 {
-    "_comment": "Client patches that fail --verify against the imported legacy client. The gate fails on changes outside this list and when an entry unexpectedly starts passing. Three Shadowstalker-era scripts were never applicable to this imported SWF (their required bytecode/string signatures do not exist); the destroy-brainless and forge tutorial entries are deliberate reverts.",
-    "recordedAt": "2026-08-16",
-    "knownFailing": [
-        "patch-dungeonblitz-banshee-wail-cap.ts",
-        "patch-dungeonblitz-chatbubble-method901-null-guard.ts",
-        "patch-dungeonblitz-class23-bitmapdata-guard.ts",
-        "patch-dungeonblitz-class72-floattext-bitmapdata-guard.ts",
-        "patch-dungeonblitz-class82-bitmapdata-guard.ts",
-        "patch-dungeonblitz-destroy-entity-without-brain.ts",
-        "patch-dungeonblitz-dye-ui-owned-color.ts",
-        "patch-dungeonblitz-dark-chi-aoe-scaling.ts",
-        "patch-dungeonblitz-forge-tutorial-persistence.ts",
-        "patch-dungeonblitz-game-method1947-screen-bitmapdata.ts",
-        "patch-dungeonblitz-game-method527-clamp-floaters.ts",
-        "patch-dungeonblitz-hide-duplicate-boss-visual.ts",
-        "patch-dungeonblitz-pet-fetches-loot.ts",
-        "patch-dungeonblitz-quest-ui.js",
-        "patch-dungeonblitz-room-cue-dead-player-guard.ts",
-        "patch-dungeonblitz-shadow-legion-equipped-skills.ts",
-        "patch-dungeonblitz-shadowstalker-miasma-bonus.ts",
-        "patch-dungeonblitz-story-zone-locks.js",
-        "patch-dungeonblitz-superanim-method806-fullscreen-bitmapdata.ts",
-        "patch_gameswz_frozen_ward_cast_anim.ts",
-        "patch_levelsnr_room4_advance_drop_on_jump.ts",
-        "patch_levelsnr_room4_drop_complete_once.ts",
-        "patch_levelsnr_room4_exit_drop_phase_on_fall.ts",
-        "patch_levelsnr_room4_require_jump_before_drop.ts",
-        "patch_levelsnr_room4_suppress_drop_repeat_dialog.ts"
-    ]
+  "_comment": "Time-bounded, explicitly owned exceptions for verifier failures inherited with the imported legacy client. The gate rejects new losses, recovered stale exceptions, missing metadata, and expired entries.",
+  "recordedAt": "2026-08-16",
+  "knownFailing": [
+    {
+      "name": "patch-dungeonblitz-banshee-wail-cap.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-chatbubble-method901-null-guard.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-class23-bitmapdata-guard.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-class72-floattext-bitmapdata-guard.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-class82-bitmapdata-guard.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-destroy-entity-without-brain.ts",
+      "owner": "client-maintainers",
+      "rationale": "Intentional compatibility revert retained for the current client protocol.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-dye-ui-owned-color.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-dark-chi-aoe-scaling.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-forge-tutorial-persistence.ts",
+      "owner": "client-maintainers",
+      "rationale": "Intentional compatibility revert retained for the current client protocol.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-game-method1947-screen-bitmapdata.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-game-method527-clamp-floaters.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-hide-duplicate-boss-visual.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-pet-fetches-loot.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-quest-ui.js",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-room-cue-dead-player-guard.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-shadow-legion-equipped-skills.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-shadowstalker-miasma-bonus.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-story-zone-locks.js",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch-dungeonblitz-superanim-method806-fullscreen-bitmapdata.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch_gameswz_frozen_ward_cast_anim.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch_levelsnr_room4_advance_drop_on_jump.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch_levelsnr_room4_drop_complete_once.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch_levelsnr_room4_exit_drop_phase_on_fall.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch_levelsnr_room4_require_jump_before_drop.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch_levelsnr_room4_suppress_drop_repeat_dialog.ts",
+      "owner": "client-maintainers",
+      "rationale": "Imported-client discrepancy requires source/toolchain confirmation before safe reapplication.",
+      "expires": "2027-02-16"
+    },
+    {
+      "name": "patch_gameswz_plague_battalion_overrides.ts",
+      "owner": "client-maintainers",
+      "rationale": "Strict FFDec 26.2.1 verification exposed a pre-existing imported Game.swz discrepancy; reapplication requires focused Plague Battalion client validation.",
+      "expires": "2026-10-16"
+    },
+    {
+      "name": "patch-dungeonblitz-bitmap-cache-guard.js",
+      "owner": "client-maintainers",
+      "rationale": "Strict FFDec 26.2.1 verification exposed a pre-existing Game source discrepancy; reapplication requires render-loop crash validation.",
+      "expires": "2026-10-16"
+    },
+    {
+      "name": "patch-dungeonblitz-chat-commands.js",
+      "owner": "client-maintainers",
+      "rationale": "The imported class_127 pcode no longer matches the sender-name anchor; the verifier or patch must be rebased against this client before mutation.",
+      "expires": "2026-10-16"
+    },
+    {
+      "name": "patch-dungeonblitz-sentinel-form-exit-cooldown.js",
+      "owner": "client-maintainers",
+      "rationale": "Strict FFDec verification exposed an inherited Sentinel source mismatch that requires form-transition gameplay validation before reimport.",
+      "expires": "2026-10-16"
+    },
+    {
+      "name": "patch-dungeonblitz-shadowstalker-expertise.js",
+      "owner": "client-maintainers",
+      "rationale": "Strict FFDec verification exposed an inherited Shadowstalker source mismatch that requires mastery-duration gameplay validation before reimport.",
+      "expires": "2026-10-16"
+    },
+    {
+      "name": "patch-dungeonblitz-superanim-crash-guard.js",
+      "owner": "client-maintainers",
+      "rationale": "The imported Game pcode lacks the verifier's historical catch-local anchor; reapplication requires renderer crash and pcode-shape validation.",
+      "expires": "2026-10-16"
+    },
+    {
+      "name": "patch-dungeonblitz-talentstone-rework.js",
+      "owner": "client-maintainers",
+      "rationale": "The runtime patch verifies but the imported host client-revision contract was stale; retain an exception until cache-busting metadata is validated with FlashBrowser.",
+      "expires": "2026-10-16"
+    },
+    {
+      "name": "patch-dungeonblitz-tutorial-party-progress.js",
+      "owner": "client-maintainers",
+      "rationale": "The verifier depends on an untracked class_112 source template; it must be converted to artifact-only verification before the exception can be removed.",
+      "expires": "2026-10-16"
+    }
+  ]
 }

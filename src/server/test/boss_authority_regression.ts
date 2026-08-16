@@ -7,11 +7,16 @@ import { EntityState, EntityTeam } from '../core/Entity';
 import { getLevelScopeKey } from '../core/LevelScope';
 import { getScopeRuntimeLevel, clearScopeRuntimeLevel } from '../core/RuntimeLevel';
 import {
+    adoptBossAuthorityHealth,
     clearBossAuthority,
+    grantBossAuthorityRewardOnce,
     getBossAuthorityKey,
     getBossAuthorityRecord,
+    markBossAuthorityTerminalDeath,
     noteBossEntity,
+    registerBossAuthorityProxy,
     reportBossDamage,
+    reportBossHealIntent,
     syncBossAuthorityCopies
 } from '../core/BossAuthority';
 
@@ -287,6 +292,53 @@ function testFreshRunClearsTheRecord(): void {
     resetScope(scope, [player]);
 }
 
+function testCanonicalEventsAreIdempotentAndTerminalIsIrreversible(): void {
+    const first = createFakeClient('First', 48001, 50);
+    const second = createFakeClient('Second', 48002, 50);
+    const scope = 'JC_Mission2#canonical-lifecycle';
+    first.currentLevel = 'JC_Mission2';
+    first.levelInstanceId = 'canonical-lifecycle';
+    second.currentLevel = 'JC_Mission2';
+    second.levelInstanceId = 'canonical-lifecycle';
+    GlobalState.sessionsByToken.set(first.token, first as never);
+    GlobalState.sessionsByToken.set(second.token, second as never);
+
+    const firstCopy = createBossCopy(700001);
+    firstCopy.name = 'GreaterBoneGolem';
+    firstCopy.EntName = 'GreaterBoneGolem';
+    const secondCopy = { ...firstCopy, id: 800001 };
+    first.entities.set(firstCopy.id, firstCopy);
+    second.entities.set(secondCopy.id, secondCopy);
+    const record = noteBossEntity(scope, firstCopy, estimateMaxHp);
+    assert.ok(record);
+    noteBossEntity(scope, secondCopy, estimateMaxHp);
+    registerBossAuthorityProxy(scope, firstCopy, first.token, firstCopy.id);
+    registerBossAuthorityProxy(scope, secondCopy, second.token, secondCopy.id);
+    assert.deepEqual([...record.proxyIdsByToken.get(first.token) ?? []], [firstCopy.id]);
+    assert.deepEqual([...record.proxyIdsByToken.get(second.token) ?? []], [secondCopy.id]);
+
+    const damage = Math.floor(record.maxHp / 3);
+    reportBossDamage(scope, firstCopy, first.token, damage, 'damage-1');
+    reportBossDamage(scope, firstCopy, first.token, damage, 'damage-1');
+    assert.equal(record.hp, record.maxHp - damage, 'a repeated event id must not double-apply damage');
+
+    const terminal = markBossAuthorityTerminalDeath(scope, secondCopy, second.token, 'death-1');
+    assert.equal(terminal?.transitioned, true);
+    assert.equal(markBossAuthorityTerminalDeath(scope, firstCopy, first.token, 'death-1')?.transitioned, false);
+    assert.equal(firstCopy.dead, true);
+    assert.equal(secondCopy.dead, true);
+
+    assert.equal(reportBossHealIntent(scope, firstCopy, first.token, record.maxHp, 'heal-after-death', true)?.accepted, false);
+    adoptBossAuthorityHealth(scope, firstCopy, record.maxHp, record.maxHp);
+    assert.equal(record.hp, 0, 'health adoption must not revive a terminal encounter');
+    assert.equal(record.phase, 'terminal');
+
+    assert.equal(grantBossAuthorityRewardOnce(scope, firstCopy, first.token, 'boss:life-0'), true);
+    assert.equal(grantBossAuthorityRewardOnce(scope, secondCopy, second.token, 'boss:life-0'), false);
+
+    resetScope(scope, [first, second]);
+}
+
 function main(): void {
     const sessionsByToken = new Map(GlobalState.sessionsByToken);
     const partyGroups = new Map(GlobalState.partyGroups);
@@ -307,6 +359,7 @@ function main(): void {
         testDamageFromEveryParticipantAggregatesOnce();
         testDeathReachesEveryViewerCopy();
         testFreshRunClearsTheRecord();
+        testCanonicalEventsAreIdempotentAndTerminalIsIrreversible();
         console.log('boss_authority_regression: ok');
     } finally {
         GlobalState.sessionsByToken = sessionsByToken;

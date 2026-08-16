@@ -10,7 +10,7 @@ const extractedXml = path.join(workRoot, "SFX_2.source.xml");
 const patchedXml = path.join(workRoot, "SFX_2.frozenward-time-compressed.xml");
 const patchedSwf = path.join(workRoot, "SFX_2.frozenward-time-compressed.swf");
 const ffdecHome = path.join(repoRoot, "build", "ffdec-home");
-const ffdecJar = path.join(repoRoot, "build", "tools", "ffdec_25.0.0", "ffdec-cli.jar");
+const ffdecPath = process.env.FFDEC_PATH || path.join(repoRoot, "build", "tools", "ffdec_25.0.0", "ffdec-cli.jar");
 
 const targetFrameCount = 56;
 const expectedSourceFrameCount = 80;
@@ -31,11 +31,11 @@ interface SpriteParts {
 function runFfdec(args: string[]): void {
   fs.mkdirSync(ffdecHome, { recursive: true });
   fs.mkdirSync(path.join(ffdecHome, "Library", "Application Support", "FFDec", "logs"), { recursive: true });
-  execFileSync(
-    "java",
-    [`-Duser.home=${ffdecHome}`, "-jar", ffdecJar, ...args],
-    { cwd: repoRoot, stdio: "inherit" },
-  );
+  if (ffdecPath.toLowerCase().endsWith(".jar")) {
+    execFileSync("java", [`-Duser.home=${ffdecHome}`, "-jar", ffdecPath, "-cli", ...args], { cwd: repoRoot, stdio: "inherit" });
+  } else {
+    execFileSync(ffdecPath, ["-cli", ...args], { cwd: repoRoot, stdio: "inherit" });
+  }
 }
 
 function ensureOriginalSourceSwf(): void {
@@ -185,8 +185,8 @@ function rebuildSwf(xmlPath: string, swfPath: string): void {
 
 function main(): void {
   const verifyOnly = process.argv.includes("--verify");
-  if (!fs.existsSync(ffdecJar)) {
-    throw new Error(`FFDec CLI not found at ${path.relative(repoRoot, ffdecJar)}.`);
+  if (!fs.existsSync(ffdecPath)) {
+    throw new Error(`FFDec CLI not found at ${path.relative(repoRoot, ffdecPath)}.`);
   }
 
   const swfForInspection = verifyOnly ? targetSwf : sourceSwf;

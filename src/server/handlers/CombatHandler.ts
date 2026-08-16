@@ -31,7 +31,14 @@ import { CharacterSync } from '../utils/CharacterSync';
 import { sendConsumableUpdate } from '../utils/ConsumableState';
 import { LevelConfig } from '../core/LevelConfig';
 import { getRoomBossAwareRoomId, isRoomBossEntity } from '../core/RoomBossState';
-import { adoptBossAuthorityHealth, getBossAuthorityRecord, syncBossAuthorityCopies } from '../core/BossAuthority';
+import {
+    adoptBossAuthorityHealth,
+    getBossAuthorityRecord,
+    grantBossAuthorityRewardOnce,
+    markBossAuthorityTerminalDeath,
+    reportBossHealIntent,
+    syncBossAuthorityCopies
+} from '../core/BossAuthority';
 import { RewardHandler } from './RewardHandler';
 import { MovementAuthority } from '../core/MovementAuthority';
 import { CastRateAuthority } from '../core/CastRateAuthority';
@@ -3046,6 +3053,12 @@ export class CombatHandler {
         entity.targetToken = 0;
         entity.nextAttack = 0;
         CombatHandler.clearCanonicalHostileBuffs(levelScope, entity, options.reason ?? 'hostile_death');
+        markBossAuthorityTerminalDeath(
+            levelScope,
+            entity,
+            Math.max(0, Math.round(Number(anchor.token ?? 0))),
+            `terminal:${entityId}:${entity.deathVersion}`
+        );
 
         const levelEntity = GlobalState.levelEntities.get(levelScope)?.get(entityId);
         if (levelEntity && levelEntity !== entity) {
@@ -5118,6 +5131,13 @@ export class CombatHandler {
                 canonicalEntity?.lifeNonce ?? CombatHandler.getEntityLifeNonce(levelScope, canonicalId)
             ) || 0));
             const lootDropNonce = `${levelScope}:${canonicalId}:${lifeNonce}`;
+            const authorityRecord = getBossAuthorityRecord(levelScope, canonicalEntity);
+            if (
+                authorityRecord &&
+                !grantBossAuthorityRewardOnce(levelScope, canonicalEntity, client.token, lootDropNonce)
+            ) {
+                return;
+            }
             canonicalEntity.lootDropped = true;
             canonicalEntity.lootDropNonce = lootDropNonce;
             canonicalEntity.lootGrantedTokens = canonicalEntity.lootGrantedTokens instanceof Set
@@ -5178,6 +5198,13 @@ export class CombatHandler {
             canonicalEntity?.lifeNonce ?? CombatHandler.getEntityLifeNonce(levelScope, canonicalId)
         ) || 0));
         const lootDropNonce = `${levelScope}:${canonicalId}:${lifeNonce}`;
+        const authorityRecord = getBossAuthorityRecord(levelScope, canonicalEntity);
+        if (
+            authorityRecord &&
+            !grantBossAuthorityRewardOnce(levelScope, canonicalEntity, client.token, lootDropNonce)
+        ) {
+            return;
+        }
         canonicalEntity.lootDropped = true;
         canonicalEntity.lootDropNonce = lootDropNonce;
         canonicalEntity.lootGrantedTokens = canonicalEntity.lootGrantedTokens instanceof Set
@@ -5865,6 +5892,36 @@ export class CombatHandler {
             destroyedEntity.clientDefeatVerified = true;
             await MissionHandler.handleForcedDungeonBossCompletion(client, destroyedEntity);
         }
+        const verifiedClientAuthorityBossDestroy = Boolean(
+            destroyedEntity &&
+            DungeonCompletionConditions.requiresBossDefeatSignal(levelName) &&
+            DungeonCompletionConditions.isClientAuthorityBoss(levelName, destroyedEntity, levelScope) &&
+            destroyedEntity.playerDamageContributed
+        );
+        if (verifiedClientAuthorityBossDestroy) {
+            const maxHp = Math.max(
+                1,
+                Math.round(Number(destroyedEntity.maxHp ?? 0)) ||
+                CombatHandler.estimateHostileMaxHp(destroyedEntity, levelScope) ||
+                1
+            );
+            CombatHandler.syncHostileHealthCopies(levelScope, destroyedEntity, 0, maxHp);
+            destroyedEntity.clientDefeatVerified = true;
+            CombatHandler.finalizeHostileDeath(client, levelScope, entityId, destroyedEntity, {
+                includeAnchor: true,
+                sendHpCorrection: false,
+                reason: 'verified_client_boss_defeat_signal'
+            });
+            CombatHandler.handleEnemyDefeatState(client, levelScope, entityId, destroyedEntity, { fromDestroy: true });
+            CombatHandler.relayPartyLocalEntityDefeat(
+                client,
+                levelScope,
+                entityId,
+                destroyedEntity,
+                { includeAnchor: true, sendHpCorrection: false }
+            );
+            return;
+        }
         let isSeedOutsideClientSpawnDestroy = false;
         if (
             destroyedEntity &&
@@ -6263,6 +6320,17 @@ export class CombatHandler {
             )
         );
         if (rejectClientBossHealing) {
+            const healObservation = reportBossHealIntent(
+                levelScope,
+                targetEntity,
+                client.token,
+                amount,
+                `heal-observation:${client.token}:${rawEntityId}:${Date.now()}`,
+                false
+            );
+            if (healObservation) {
+                syncBossAuthorityCopies(levelScope, healObservation.record);
+            }
             // The client applies its local regen tick before reporting it. Undo
             // that visible heal while keeping the canonical boss HP unchanged.
             client.send(

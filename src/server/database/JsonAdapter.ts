@@ -5,6 +5,19 @@ import { Config } from '../core/config';
 import { GameData } from '../core/GameData';
 import { normalizeAccountIdentifier, PasswordRecord } from '../auth/PasswordAuth';
 import { GameDataPersistenceAdapter, MongoGameDataAdapter } from './MongoGameDataAdapter';
+import { StructuredLogger } from '../core/StructuredLogger';
+
+const persistenceLog = new StructuredLogger('JsonAdapter');
+
+type AccountCreateJournal = {
+    version: 1;
+    operation: 'create-account';
+    account: UserAccount;
+    saveFileName: string;
+    createdAt: string;
+};
+
+type AccountTransactionFaultStage = 'after-journal' | 'after-save' | 'after-account-commit';
 
 export class JsonAdapter implements IDatabase {
     private static readonly renameRetryDelaysMs = [25, 50, 100, 200, 350];
@@ -12,6 +25,7 @@ export class JsonAdapter implements IDatabase {
     private static readonly accountMutationQueues = new Map<string, Promise<void>>();
     private static renameFile = (fromPath: string, toPath: string): Promise<void> =>
         fs.rename(fromPath, toPath);
+    private static accountTransactionFaultHook: ((stage: AccountTransactionFaultStage) => void) | null = null;
     private static mongoGameData: GameDataPersistenceAdapter | null = Config.ENABLE_MONGO_GAME_DATA
         ? new MongoGameDataAdapter(
             Config.MONGODB_URI,
@@ -35,15 +49,12 @@ export class JsonAdapter implements IDatabase {
 
     public static async initializeMongoGameData(): Promise<void> {
         if (!JsonAdapter.mongoGameData) {
-            console.log('[GameData] JSON account/save authority active (Mongo game data disabled)');
+            persistenceLog.info('authority.ready', { mode: 'json' });
             return;
         }
 
         await JsonAdapter.mongoGameData.connect();
-        console.log(
-            `[GameData] Mongo account/save authority active: db=${Config.MONGODB_DB_NAME} `
-            + `accounts=${Config.MONGODB_ACCOUNTS_COLLECTION} saves=${Config.MONGODB_SAVES_COLLECTION}`
-        );
+        persistenceLog.info('authority.ready', { mode: 'mongo', database: Config.MONGODB_DB_NAME });
     }
 
     public static async closeMongoGameData(): Promise<void> {
@@ -52,6 +63,12 @@ export class JsonAdapter implements IDatabase {
 
     public static configureMongoGameDataForTests(adapter: GameDataPersistenceAdapter | null): void {
         JsonAdapter.mongoGameData = adapter;
+    }
+
+    public static configureAccountTransactionFaultForTests(
+        hook: ((stage: AccountTransactionFaultStage) => void) | null
+    ): void {
+        JsonAdapter.accountTransactionFaultHook = hook;
     }
 
     private normalizeCharacterName(value: string | null | undefined): string {
@@ -119,7 +136,7 @@ export class JsonAdapter implements IDatabase {
                     continue;
                 }
                 if (err instanceof SyntaxError) {
-                    console.error(`[JsonAdapter] Invalid save JSON at ${savePath}`);
+                    persistenceLog.error('save.invalid_json', { path: savePath });
                     return null;
                 }
                 throw err;
@@ -163,6 +180,131 @@ export class JsonAdapter implements IDatabase {
         throw new Error(`[JsonAdapter] Failed to rename ${tmpPath} to ${savePath}`);
     }
 
+    private async syncDirectory(directoryPath: string): Promise<void> {
+        let handle: fs.FileHandle | null = null;
+        try {
+            handle = await fs.open(directoryPath, 'r');
+            await handle.sync();
+        } catch (err: any) {
+            // Windows does not consistently allow opening a directory handle. The file itself
+            // is still flushed before rename; POSIX hosts additionally get the directory flush.
+            if (!['EISDIR', 'EPERM', 'EACCES', 'EINVAL', 'ENOTSUP'].includes(String(err?.code ?? ''))) {
+                throw err;
+            }
+        } finally {
+            await handle?.close().catch(() => undefined);
+        }
+    }
+
+    private get accountTransactionDir(): string {
+        return path.join(path.dirname(this.accountsPath), 'transactions');
+    }
+
+    private async writeAccountCreateJournal(account: UserAccount): Promise<string> {
+        await fs.mkdir(this.accountTransactionDir, { recursive: true });
+        const journalPath = path.join(
+            this.accountTransactionDir,
+            `account-create-${account.user_id}-${Date.now()}-${Math.random().toString(16).slice(2)}.json`
+        );
+        const tmpPath = `${journalPath}.${process.pid}.tmp`;
+        const journal: AccountCreateJournal = {
+            version: 1,
+            operation: 'create-account',
+            account,
+            saveFileName: `${account.user_id}.json`,
+            createdAt: new Date().toISOString()
+        };
+        let handle: fs.FileHandle | null = null;
+        try {
+            handle = await fs.open(tmpPath, 'wx');
+            await handle.writeFile(JSON.stringify(journal, null, 2), 'utf8');
+            await handle.sync();
+            await handle.close();
+            handle = null;
+            await this.renameWithRetry(tmpPath, journalPath);
+            await this.syncDirectory(this.accountTransactionDir);
+            return journalPath;
+        } finally {
+            await handle?.close().catch(() => undefined);
+            await fs.rm(tmpPath, { force: true }).catch(() => undefined);
+        }
+    }
+
+    private parseAccountCreateJournal(raw: string, journalPath: string): AccountCreateJournal {
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(raw);
+        } catch (error: any) {
+            throw new Error(`[JsonAdapter] Invalid account transaction journal ${journalPath}: ${error?.message ?? error}`);
+        }
+        if (!parsed || typeof parsed !== 'object') {
+            throw new Error(`[JsonAdapter] Invalid account transaction journal ${journalPath}: expected object`);
+        }
+        const journal = parsed as Partial<AccountCreateJournal>;
+        const account = journal.account as UserAccount | undefined;
+        const userId = Math.max(0, Math.round(Number(account?.user_id ?? 0)));
+        if (
+            journal.version !== 1 ||
+            journal.operation !== 'create-account' ||
+            !account ||
+            userId <= 0 ||
+            !normalizeAccountIdentifier(account.email) ||
+            journal.saveFileName !== `${userId}.json`
+        ) {
+            throw new Error(`[JsonAdapter] Invalid account transaction journal ${journalPath}: unsupported shape`);
+        }
+        return journal as AccountCreateJournal;
+    }
+
+    private async removeAccountCreateJournal(journalPath: string): Promise<void> {
+        await fs.rm(journalPath, { force: true });
+        await this.syncDirectory(this.accountTransactionDir);
+    }
+
+    private async recoverAccountCreateTransactions(accounts: UserAccount[]): Promise<void> {
+        let journalNames: string[];
+        try {
+            journalNames = (await fs.readdir(this.accountTransactionDir))
+                .filter((name) => /^account-create-\d+-.*\.json$/.test(name))
+                .sort();
+        } catch (err: any) {
+            if (err?.code === 'ENOENT') {
+                return;
+            }
+            throw err;
+        }
+
+        for (const journalName of journalNames) {
+            const journalPath = path.join(this.accountTransactionDir, journalName);
+            const journal = this.parseAccountCreateJournal(await fs.readFile(journalPath, 'utf8'), journalPath);
+            const accountExists = accounts.some((account) => account.user_id === journal.account.user_id);
+            const savePath = path.join(this.savesDir, journal.saveFileName);
+            if (accountExists) {
+                try {
+                    await fs.access(savePath);
+                } catch (err: any) {
+                    if (err?.code !== 'ENOENT') {
+                        throw err;
+                    }
+                    await this.performSaveCharacters(journal.account.user_id, [], savePath);
+                }
+            } else {
+                // Account publication is the commit point. A save left before that point is an
+                // orphan and is rolled back; a published account is completed above.
+                await fs.rm(savePath, { force: true });
+            }
+            await this.removeAccountCreateJournal(journalPath);
+        }
+    }
+
+    private async prepareAccountCreate(account: UserAccount): Promise<string> {
+        const journalPath = await this.writeAccountCreateJournal(account);
+        JsonAdapter.accountTransactionFaultHook?.('after-journal');
+        await this.performSaveCharacters(account.user_id, [], path.join(this.savesDir, `${account.user_id}.json`));
+        JsonAdapter.accountTransactionFaultHook?.('after-save');
+        return journalPath;
+    }
+
     private async performSaveCharacters(
         userId: number,
         characters: Character[],
@@ -183,9 +325,7 @@ export class JsonAdapter implements IDatabase {
                 : await this.readSaveFile(userId);
 
             if (existing && Array.isArray(existing.characters) && existing.characters.length > 0) {
-                console.warn(
-                    `[JsonAdapter] Refusing to overwrite non-empty save ${savePath} with an empty character list`
-                );
+                persistenceLog.warn('save.empty_overwrite_rejected', { path: savePath, userId });
                 return;
             }
         }
@@ -321,15 +461,20 @@ export class JsonAdapter implements IDatabase {
     private async readAccountsFromDisk(): Promise<UserAccount[]> {
         try {
             const accounts = await this.readAccountsFile(this.accountsPath);
+            await this.recoverAccountCreateTransactions(accounts);
             await this.ensureBootstrapSaves(accounts);
             return accounts;
         } catch (err: any) {
             if (err?.code === 'ENOENT') {
                 try {
-                    return await this.readAccountsFile(this.legacyAccountsPath);
+                    const legacyAccounts = await this.readAccountsFile(this.legacyAccountsPath);
+                    await this.recoverAccountCreateTransactions(legacyAccounts);
+                    return legacyAccounts;
                 } catch (legacyErr: any) {
                     if (legacyErr?.code === 'ENOENT') {
-                        return this.materializeBootstrapData();
+                        const bootstrapAccounts = await this.materializeBootstrapData();
+                        await this.recoverAccountCreateTransactions(bootstrapAccounts);
+                        return bootstrapAccounts;
                     }
                     throw legacyErr;
                 }
@@ -337,9 +482,8 @@ export class JsonAdapter implements IDatabase {
 
             try {
                 const backup = await this.readAccountsFile(`${this.accountsPath}.bak`);
-                console.error(
-                    `[JsonAdapter] Accounts authority at ${this.accountsPath} is invalid; using validated backup`
-                );
+                persistenceLog.error('account_authority.backup_recovered', { path: this.accountsPath });
+                await this.recoverAccountCreateTransactions(backup);
                 return backup;
             } catch (backupErr: any) {
                 throw new Error(
@@ -403,7 +547,7 @@ export class JsonAdapter implements IDatabase {
 
         await this.writeAccountsAtomic(accounts);
         await this.ensureBootstrapSaves(accounts);
-        console.log(`[JsonAdapter] Initialized ${accounts.length} local fixture account(s).`);
+        persistenceLog.info('fixture.initialized', { accountCount: accounts.length });
         return accounts;
     }
 
@@ -413,8 +557,22 @@ export class JsonAdapter implements IDatabase {
         this.parseAccounts(JSON.stringify(accounts), this.accountsPath);
 
         try {
-            await this.readAccountsFile(this.accountsPath);
-            await fs.copyFile(this.accountsPath, `${this.accountsPath}.bak`);
+            const currentAccounts = await this.readAccountsFile(this.accountsPath);
+            const backupPath = `${this.accountsPath}.bak`;
+            const backupTmpPath = `${backupPath}.${process.pid}.${Date.now()}.tmp`;
+            let backupHandle: fs.FileHandle | null = null;
+            try {
+                backupHandle = await fs.open(backupTmpPath, 'wx');
+                await backupHandle.writeFile(JSON.stringify(currentAccounts, null, 2), 'utf8');
+                await backupHandle.sync();
+                await backupHandle.close();
+                backupHandle = null;
+                await this.renameWithRetry(backupTmpPath, backupPath);
+                await this.syncDirectory(path.dirname(this.accountsPath));
+            } finally {
+                await backupHandle?.close().catch(() => undefined);
+                await fs.rm(backupTmpPath, { force: true }).catch(() => undefined);
+            }
         } catch (err: any) {
             if (err?.code !== 'ENOENT') {
                 throw err;
@@ -430,13 +588,17 @@ export class JsonAdapter implements IDatabase {
             await handle.close();
             handle = null;
             await this.renameWithRetry(tmpPath, this.accountsPath);
+            await this.syncDirectory(path.dirname(this.accountsPath));
         } finally {
             await handle?.close().catch(() => undefined);
             await fs.rm(tmpPath, { force: true }).catch(() => undefined);
         }
     }
 
-    private async mutateAccounts<T>(mutation: (accounts: UserAccount[]) => Promise<T> | T): Promise<T> {
+    private async mutateAccounts<T>(
+        mutation: (accounts: UserAccount[]) => Promise<T> | T,
+        afterCommit?: () => Promise<void>
+    ): Promise<T> {
         const queueKey = this.accountsPath;
         const previous = JsonAdapter.accountMutationQueues.get(queueKey) ?? Promise.resolve();
         let result!: T;
@@ -446,6 +608,7 @@ export class JsonAdapter implements IDatabase {
                 const accounts = await this.readAccountsFromDisk();
                 result = await mutation(accounts);
                 await this.writeAccountsAtomic(accounts);
+                await afterCommit?.();
             });
 
         JsonAdapter.accountMutationQueues.set(queueKey, current);
@@ -647,6 +810,7 @@ export class JsonAdapter implements IDatabase {
             throw new Error('Cannot create Discord account without a generated email.');
         }
 
+        let journalPath: string | null = null;
         return this.mutateAccounts(async (accounts) => {
             const existingDiscordIndex = accounts.findIndex(acc => this.normalizeDiscordId(acc.discordId) === discordId);
             if (existingDiscordIndex >= 0) {
@@ -673,9 +837,15 @@ export class JsonAdapter implements IDatabase {
                 accountSource: 'discord_oauth'
             }, discordUser, sponsor);
 
-            await this.performSaveCharacters(newId, [], path.join(this.savesDir, `${newId}.json`));
+            journalPath = await this.prepareAccountCreate(account);
             accounts.push(account);
             return account;
+        }, async () => {
+            if (!journalPath) {
+                return;
+            }
+            JsonAdapter.accountTransactionFaultHook?.('after-account-commit');
+            await this.removeAccountCreateJournal(journalPath);
         });
     }
 
@@ -691,6 +861,7 @@ export class JsonAdapter implements IDatabase {
             throw new Error('Cannot create account without an email.');
         }
 
+        let journalPath: string | null = null;
         return this.mutateAccounts(async (accounts) => {
             const existing = accounts.find(acc => this.accountMatchesEmail(acc, normalizedEmail));
             if (existing) {
@@ -705,9 +876,15 @@ export class JsonAdapter implements IDatabase {
                 ...passwordRecord
             };
 
-            await this.performSaveCharacters(newId, [], path.join(this.savesDir, `${newId}.json`));
+            journalPath = await this.prepareAccountCreate(account);
             accounts.push(account);
             return account;
+        }, async () => {
+            if (!journalPath) {
+                return;
+            }
+            JsonAdapter.accountTransactionFaultHook?.('after-account-commit');
+            await this.removeAccountCreateJournal(journalPath);
         });
     }
 

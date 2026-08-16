@@ -8,6 +8,8 @@ Project version: `1.24.11`
 
 Audit mode: read-only source, configuration, dependency, and automated-test review
 
+> Historical baseline: this report describes revision `db88c86` and is intentionally not rewritten as defects are fixed. The item-level remediation evidence for release 1.26.0 is maintained in [AUDIT-PLAN.md](AUDIT-PLAN.md), and the complete implementation record is in [CHANGELOG.md](CHANGELOG.md).
+
 ## Executive summary
 
 Dungeon Blitz R is a substantial preservation/reimplementation project with several unusually strong qualities: strict TypeScript, broad protocol/gameplay regression coverage, explicit dungeon-completion contracts, rate-limited authentication routes, scrypt password verifiers, atomic character-save replacement, and defensive admin authorization. Its main risk is not a lack of effort or tests. It is that release, binary-patch, persistence, and runtime-control mechanisms have grown faster than the controls around them.

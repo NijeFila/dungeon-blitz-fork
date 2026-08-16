@@ -3,7 +3,8 @@ import { LevelConfig } from './LevelConfig';
 import type {
     DungeonCompletionCondition,
     DungeonCompletionEntityObjective,
-    DungeonCompletionMode
+    DungeonCompletionMode,
+    EncounterAuthorityMode
 } from './DungeonCompletionTypes';
 import { isRoomBossEntity } from './RoomBossState';
 
@@ -127,6 +128,15 @@ export class DungeonCompletionConditions {
         return Boolean(DungeonCompletionConditions.get(levelName)?.allowDerivedBossHpCompletion);
     }
 
+    static getEncounterAuthorityMode(levelName: string | null | undefined): EncounterAuthorityMode {
+        const configured = DungeonCompletionConditions.get(levelName)?.encounterAuthority;
+        const mode = configured === 'legacy' || configured === 'canonical' ? configured : 'shadow';
+        if (mode === 'canonical' && /^(0|false|off|no)$/i.test(String(process.env.CANONICAL_ENCOUNTER_AUTHORITY_ENABLED ?? 'true').trim())) {
+            return 'shadow';
+        }
+        return mode;
+    }
+
     static getSimultaneousBossWindowMs(levelName: string | null | undefined): number {
         return Math.max(0, Math.round(Number(DungeonCompletionConditions.get(levelName)?.simultaneousBossWindowMs ?? 0)));
     }
@@ -223,13 +233,20 @@ export class DungeonCompletionConditions {
         entity: any,
         levelScope: string = ''
     ): boolean {
-        if (!Boolean(entity?.clientSpawned)) {
-            return false;
-        }
         const condition = DungeonCompletionConditions.get(levelName);
         const allowed = new Set((condition?.clientAuthorityBosses ?? []).map(normalizeIdentity));
         const canonical = DungeonCompletionConditions.getCanonicalBossName(levelName, entity, levelScope);
-        return Boolean(canonical && allowed.has(normalizeIdentity(canonical)));
+        if (!canonical || !allowed.has(normalizeIdentity(canonical))) {
+            return false;
+        }
+        // Hybrid canonical entities are server-side records for actors whose visible lifecycle
+        // is still authored by the Flash room script. `clientSpawned` describes where the record
+        // lives, not who can observe the defeat transition.
+        return Boolean(
+            entity?.clientSpawned ||
+            entity?.hybridCanonicalHostile ||
+            condition?.encounterAuthority === 'canonical'
+        );
     }
 
     static getObjectiveRole(levelName: string | null | undefined, entity: any): string {

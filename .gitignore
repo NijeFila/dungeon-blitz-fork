@@ -11,6 +11,10 @@ temp
 .DS_Store
 build/
 artifacts/
+src/server/coverage/
+src/server/test-results/
+src/server/build-*.log
+hs_err_pid*.log
 logs/
 src/server/data/runtime/*crash*.log
 src/server/data/discord_account_links.json

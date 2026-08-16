@@ -1,4 +1,5 @@
 export type DungeonCompletionMode = 'bosses' | 'objectives' | 'full-clear' | 'client-signal' | 'disabled';
+export type EncounterAuthorityMode = 'legacy' | 'shadow' | 'canonical';
 
 export type DungeonCompletionEntityObjective = {
     names: string[];
@@ -32,6 +33,7 @@ export type DungeonCompletionCondition = {
     requireRoomBossMarker?: boolean;
     allowVerifiedClientBossWithoutRoomBossMarker?: boolean;
     allowTerminalCanonicalBossWithoutRoomBossMarker?: boolean;
+    encounterAuthority?: EncounterAuthorityMode;
 };
 
 export type DungeonCompletionPhase =

@@ -10,7 +10,7 @@ RUN npm run build
 FROM node:24-bookworm-slim
 
 # Main port
-EXPOSE 80/tcp
+EXPOSE 8000/tcp
 EXPOSE 8080/tcp
 EXPOSE 843/tcp
 

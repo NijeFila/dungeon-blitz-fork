@@ -36,6 +36,8 @@ jobs:
           chmod +x build/ffdec/ffdec.sh
       - name: Typecheck
         run: npm run typecheck --prefix src/server
+      - name: Lint and architecture debt budgets
+        run: npm run lint --prefix src/server
       - name: Build release runtime
         run: npm run build --prefix src/server
       - name: Regression suite
@@ -43,6 +45,24 @@ jobs:
           JUNIT_OUTPUT: ${{ github.workspace }}/artifacts/regression.xml
           TEST_TIMEOUT_MS: "180000"
         run: npm run test:regression --prefix src/server
+      - name: Critical-path coverage gate
+        run: npm run test:coverage --prefix src/server
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: critical-coverage
+          path: src/server/coverage/coverage-summary.json
+      - name: Install browser test runtime
+        run: npx --prefix src/server playwright install --with-deps chromium
+      - name: Browser acceptance tests
+        run: npm run test:browser --prefix src/server
+      - name: Upload browser report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-results
+          path: src/server/artifacts/browser.xml
       - name: Upload regression report
         if: always()
         uses: actions/upload-artifact@v4
@@ -52,8 +72,16 @@ jobs:
       - name: Verify client patches without writes or skips
         env:
           VERIFY_CLIENT_PATCHES_REQUIRE_TOOLS: "1"
-          FFDEC_PATH: ${{ github.workspace }}/build/ffdec/ffdec.sh
+          VERIFY_CLIENT_PATCHES_CONCURRENCY: "2"
+          JAVA_TOOL_OPTIONS: -Xms256m -Xmx2g
+          FFDEC_PATH: ${{ github.workspace }}/build/ffdec/ffdec.jar
         run: npm run verify:client-patches --prefix src/server
+      - name: Verify immutable client artifact manifest
+        run: npm run verify:client-artifacts --prefix src/server
+      - name: Repeat build and verify deterministic client state
+        run: |
+          npm run build --prefix src/server
+          npm run verify:client-artifacts --prefix src/server
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high --prefix src/server
       - name: Assert verification did not mutate tracked sources
@@ -70,3 +98,56 @@ jobs:
           path: |
             artifacts/dungeon-blitz-runtime.tgz
             artifacts/dungeon-blitz-runtime.tgz.sha256
+
+  container-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build clean runtime image
+        run: docker build -f Container/Containerfile -t dungeon-blitz-r:audit .
+      - name: Run read-only and verify HTTP/game readiness
+        shell: bash
+        run: |
+          mkdir -p /tmp/db-saves
+          printf '[]\n' > /tmp/db-accounts.json
+          docker run -d --name dungeon-blitz-audit --read-only --tmpfs /tmp:rw,noexec,nosuid \
+            -p 18000:8000 -p 18080:8080 \
+            --mount type=bind,src=/tmp/db-accounts.json,dst=/opt/games/dungeon-blitz-r/src/server/data/Accounts.json \
+            --mount type=bind,src=/tmp/db-saves,dst=/opt/games/dungeon-blitz-r/src/server/data/saves \
+            dungeon-blitz-r:audit
+          trap 'docker logs dungeon-blitz-audit; docker rm -f dungeon-blitz-audit' EXIT
+          for attempt in $(seq 1 60); do
+            curl --fail --silent http://127.0.0.1:18000/healthz && break
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:18000/healthz
+          node -e "const n=require('net').connect(18080,'127.0.0.1',()=>{n.end();process.exit(0)});n.setTimeout(3000,()=>process.exit(1));n.on('error',()=>process.exit(1))"
+          test "$(docker inspect -f '{{.Config.User}}' dungeon-blitz-audit)" = node
+          node -e "const n=require('net').connect(18080,'127.0.0.1');n.on('close',()=>process.exit(0));n.on('error',()=>process.exit(0));setTimeout(()=>process.exit(1),15000)" &
+          socket_pid=$!
+          docker stop --time 10 dungeon-blitz-audit
+          wait "$socket_pid"
+
+  launcher-smoke:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Exercise Windows launcher dependency path
+        if: runner.os == 'Windows'
+        shell: cmd
+        env:
+          LAUNCHER_SMOKE_TEST: "true"
+        run: dev-windows.bat
+      - name: Exercise macOS launcher dependency path
+        if: runner.os == 'macOS'
+        env:
+          LAUNCHER_SMOKE_TEST: "true"
+        run: bash dev-mac.command
