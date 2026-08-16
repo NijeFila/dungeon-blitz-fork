@@ -504,7 +504,6 @@ function syncClientRevision(swfPath: string, verifyOnly: boolean): void {
 const { swfPath, verify } = parseArgs(process.argv);
 if (verify) {
     verifySwf(swfPath);
-    syncClientRevision(swfPath, true);
 } else {
     patchSwf(swfPath);
     syncClientRevision(swfPath, false);

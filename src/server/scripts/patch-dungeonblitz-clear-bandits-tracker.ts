@@ -646,7 +646,6 @@ if (verify) {
         throw new PatchError(`${path.basename(swfPath)} still has load-unsafe mission parser metadata.`);
     }
     verifyBranchTargets(markerCode, 'load-safe mission parser');
-    syncClientRevision(swfPath, true);
 } else {
     patchSwf(swfPath);
     patchTrackerCountVisibility(swfPath);

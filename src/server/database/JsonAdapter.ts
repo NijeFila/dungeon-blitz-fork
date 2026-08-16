@@ -9,6 +9,7 @@ import { GameDataPersistenceAdapter, MongoGameDataAdapter } from './MongoGameDat
 export class JsonAdapter implements IDatabase {
     private static readonly renameRetryDelaysMs = [25, 50, 100, 200, 350];
     private static readonly saveQueues = new Map<string, Promise<void>>();
+    private static readonly accountMutationQueues = new Map<string, Promise<void>>();
     private static renameFile = (fromPath: string, toPath: string): Promise<void> =>
         fs.rename(fromPath, toPath);
     private static mongoGameData: GameDataPersistenceAdapter | null = Config.ENABLE_MONGO_GAME_DATA
@@ -258,6 +259,206 @@ export class JsonAdapter implements IDatabase {
         ));
     }
 
+    private parseAccounts(data: string, sourcePath: string): UserAccount[] {
+        if (!data.trim()) {
+            return [];
+        }
+
+        const parsed = JSON.parse(data) as unknown;
+        if (!Array.isArray(parsed)) {
+            throw new Error(`[JsonAdapter] Accounts JSON at ${sourcePath} is not an array`);
+        }
+
+        const accounts = parsed.map((entry, index) => {
+            const candidate = entry as Partial<UserAccount> | null;
+            const email = normalizeAccountIdentifier(candidate?.email);
+            const userId = Number(candidate?.user_id);
+            if (!candidate || !email || !Number.isSafeInteger(userId) || userId <= 0) {
+                throw new Error(`[JsonAdapter] Invalid account record ${index} at ${sourcePath}`);
+            }
+
+            const emailAliases = this.normalizeEmailAliases(candidate.emailAliases);
+            return {
+                ...candidate,
+                email,
+                ...(emailAliases.length > 0 ? { emailAliases } : {}),
+                user_id: userId
+            } as UserAccount;
+        });
+
+        const userIds = new Set<number>();
+        const identifiers = new Set<string>();
+        const discordIds = new Set<string>();
+        for (const account of accounts) {
+            if (userIds.has(account.user_id)) {
+                throw new Error(`[JsonAdapter] Duplicate account user_id ${account.user_id} at ${sourcePath}`);
+            }
+            userIds.add(account.user_id);
+
+            for (const identifier of [account.email, ...this.normalizeEmailAliases(account.emailAliases)]) {
+                if (identifiers.has(identifier)) {
+                    throw new Error(`[JsonAdapter] Duplicate account identifier ${identifier} at ${sourcePath}`);
+                }
+                identifiers.add(identifier);
+            }
+
+            const discordId = this.normalizeDiscordId(account.discordId);
+            if (discordId) {
+                if (discordIds.has(discordId)) {
+                    throw new Error(`[JsonAdapter] Duplicate Discord account ${discordId} at ${sourcePath}`);
+                }
+                discordIds.add(discordId);
+            }
+        }
+
+        return accounts;
+    }
+
+    private async readAccountsFile(accountsPath: string): Promise<UserAccount[]> {
+        return this.parseAccounts(await fs.readFile(accountsPath, 'utf8'), accountsPath);
+    }
+
+    private async readAccountsFromDisk(): Promise<UserAccount[]> {
+        try {
+            const accounts = await this.readAccountsFile(this.accountsPath);
+            await this.ensureBootstrapSaves(accounts);
+            return accounts;
+        } catch (err: any) {
+            if (err?.code === 'ENOENT') {
+                try {
+                    return await this.readAccountsFile(this.legacyAccountsPath);
+                } catch (legacyErr: any) {
+                    if (legacyErr?.code === 'ENOENT') {
+                        return this.materializeBootstrapData();
+                    }
+                    throw legacyErr;
+                }
+            }
+
+            try {
+                const backup = await this.readAccountsFile(`${this.accountsPath}.bak`);
+                console.error(
+                    `[JsonAdapter] Accounts authority at ${this.accountsPath} is invalid; using validated backup`
+                );
+                return backup;
+            } catch (backupErr: any) {
+                throw new Error(
+                    `[JsonAdapter] Refusing to continue with invalid accounts authority at ${this.accountsPath}: `
+                    + `${err?.message ?? err}. Backup recovery failed: ${backupErr?.message ?? backupErr}`
+                );
+            }
+        }
+    }
+
+    private async ensureBootstrapSaves(accounts: UserAccount[]): Promise<void> {
+        const accountIds = new Set(accounts.map((account) => account.user_id));
+        let fixtures: string[];
+        try {
+            fixtures = await fs.readdir(path.join(path.dirname(this.accountsPath), 'fixtures', 'singleplayer', 'saves'));
+        } catch (err: any) {
+            if (err?.code === 'ENOENT') {
+                return;
+            }
+            throw err;
+        }
+
+        await this.ensureSavesDir();
+        await Promise.all(fixtures
+            .filter((name) => /^\d+\.json$/.test(name))
+            .filter((name) => accountIds.has(Number.parseInt(name, 10)))
+            .map(async (name) => {
+                const destination = path.join(this.savesDir, name);
+                try {
+                    const fixturePath = path.join(
+                        path.dirname(this.accountsPath),
+                        'fixtures',
+                        'singleplayer',
+                        'saves',
+                        name
+                    );
+                    await fs.copyFile(fixturePath, destination, fs.constants.COPYFILE_EXCL);
+                } catch (err: any) {
+                    if (err?.code !== 'EEXIST') {
+                        throw err;
+                    }
+                }
+            }));
+    }
+
+    private async materializeBootstrapData(): Promise<UserAccount[]> {
+        let accounts: UserAccount[];
+        try {
+            accounts = await this.readAccountsFile(path.join(
+                path.dirname(this.accountsPath),
+                'fixtures',
+                'singleplayer',
+                'Accounts.json'
+            ));
+        } catch (err: any) {
+            if (err?.code === 'ENOENT') {
+                return [];
+            }
+            throw err;
+        }
+
+        await this.writeAccountsAtomic(accounts);
+        await this.ensureBootstrapSaves(accounts);
+        console.log(`[JsonAdapter] Initialized ${accounts.length} local fixture account(s).`);
+        return accounts;
+    }
+
+    private async writeAccountsAtomic(accounts: UserAccount[]): Promise<void> {
+        await fs.mkdir(path.dirname(this.accountsPath), { recursive: true });
+        // Validate before touching either the primary or its last-known-good backup.
+        this.parseAccounts(JSON.stringify(accounts), this.accountsPath);
+
+        try {
+            await this.readAccountsFile(this.accountsPath);
+            await fs.copyFile(this.accountsPath, `${this.accountsPath}.bak`);
+        } catch (err: any) {
+            if (err?.code !== 'ENOENT') {
+                throw err;
+            }
+        }
+
+        const tmpPath = `${this.accountsPath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
+        let handle: fs.FileHandle | null = null;
+        try {
+            handle = await fs.open(tmpPath, 'wx');
+            await handle.writeFile(JSON.stringify(accounts, null, 2), 'utf8');
+            await handle.sync();
+            await handle.close();
+            handle = null;
+            await this.renameWithRetry(tmpPath, this.accountsPath);
+        } finally {
+            await handle?.close().catch(() => undefined);
+            await fs.rm(tmpPath, { force: true }).catch(() => undefined);
+        }
+    }
+
+    private async mutateAccounts<T>(mutation: (accounts: UserAccount[]) => Promise<T> | T): Promise<T> {
+        const queueKey = this.accountsPath;
+        const previous = JsonAdapter.accountMutationQueues.get(queueKey) ?? Promise.resolve();
+        let result!: T;
+        const current = previous
+            .catch(() => undefined)
+            .then(async () => {
+                const accounts = await this.readAccountsFromDisk();
+                result = await mutation(accounts);
+                await this.writeAccountsAtomic(accounts);
+            });
+
+        JsonAdapter.accountMutationQueues.set(queueKey, current);
+        try {
+            await current;
+            return result;
+        } finally {
+            if (JsonAdapter.accountMutationQueues.get(queueKey) === current) {
+                JsonAdapter.accountMutationQueues.delete(queueKey);
+            }
+        }
+    }
+
     private accountMatchesEmail(account: UserAccount, normalizedEmail: string): boolean {
         if (normalizeAccountIdentifier(account.email) === normalizedEmail) {
             return true;
@@ -334,46 +535,11 @@ export class JsonAdapter implements IDatabase {
     }
 
     private async readAccounts(): Promise<UserAccount[]> {
-        for (const accountsPath of [this.accountsPath, this.legacyAccountsPath]) {
-            try {
-                const data = await fs.readFile(accountsPath, 'utf8');
-                if (!data.trim()) {
-                    return [];
-                }
-                const parsed = JSON.parse(data);
-                if (!Array.isArray(parsed)) {
-                    console.error(`[JsonAdapter] Accounts JSON at ${accountsPath} is not an array`);
-                    return [];
-                }
-
-                return parsed
-                    .filter((entry: Partial<UserAccount>) =>
-                        typeof entry?.email === 'string' &&
-                        Number.isSafeInteger(Number(entry?.user_id)) &&
-                        Number(entry?.user_id) > 0
-                    )
-                    .map((entry: UserAccount) => {
-                        const emailAliases = this.normalizeEmailAliases(entry.emailAliases);
-                        return {
-                            ...entry,
-                            email: normalizeAccountIdentifier(entry.email),
-                            ...(emailAliases.length > 0 ? { emailAliases } : {}),
-                            user_id: Math.round(Number(entry.user_id))
-                        };
-                    });
-            } catch (err: any) {
-                if (err.code === 'ENOENT') {
-                    continue;
-                }
-                if (err instanceof SyntaxError) {
-                    console.error(`[JsonAdapter] Invalid accounts JSON at ${accountsPath}: ${err.message}`);
-                    continue;
-                }
-                throw err;
-            }
+        const pendingMutation = JsonAdapter.accountMutationQueues.get(this.accountsPath);
+        if (pendingMutation) {
+            await pendingMutation;
         }
-
-        return [];
+        return this.readAccountsFromDisk();
     }
 
     public async getAccount(email: string): Promise<UserAccount | null> {
@@ -439,29 +605,29 @@ export class JsonAdapter implements IDatabase {
             throw new Error('Cannot link Discord without a game account.');
         }
 
-        const accounts = await this.readAccounts();
-        const accountIndex = accounts.findIndex(acc => acc.user_id === normalizedUserId);
-        if (accountIndex < 0) {
-            throw new Error('Game account not found.');
-        }
+        return this.mutateAccounts((accounts) => {
+            const accountIndex = accounts.findIndex(acc => acc.user_id === normalizedUserId);
+            if (accountIndex < 0) {
+                throw new Error('Game account not found.');
+            }
 
-        const existingDiscordOwner = accounts.find(acc =>
-            acc.user_id !== normalizedUserId &&
-            this.normalizeDiscordId(acc.discordId) === discordId
-        );
-        if (existingDiscordOwner) {
-            throw new Error('Discord account is already linked to another game account.');
-        }
+            const existingDiscordOwner = accounts.find(acc =>
+                acc.user_id !== normalizedUserId &&
+                this.normalizeDiscordId(acc.discordId) === discordId
+            );
+            if (existingDiscordOwner) {
+                throw new Error('Discord account is already linked to another game account.');
+            }
 
-        const existingAccountDiscordId = this.normalizeDiscordId(accounts[accountIndex].discordId);
-        if (existingAccountDiscordId && existingAccountDiscordId !== discordId) {
-            throw new Error('Game account is already linked to another Discord account.');
-        }
+            const existingAccountDiscordId = this.normalizeDiscordId(accounts[accountIndex].discordId);
+            if (existingAccountDiscordId && existingAccountDiscordId !== discordId) {
+                throw new Error('Game account is already linked to another Discord account.');
+            }
 
-        const account = this.applyDiscordProfile(accounts[accountIndex], discordUser, sponsor);
-        accounts[accountIndex] = account;
-        await fs.writeFile(this.accountsPath, JSON.stringify(accounts, null, 2));
-        return account;
+            const account = this.applyDiscordProfile(accounts[accountIndex], discordUser, sponsor);
+            accounts[accountIndex] = account;
+            return account;
+        });
     }
 
     public async createDiscordAccount(
@@ -481,40 +647,36 @@ export class JsonAdapter implements IDatabase {
             throw new Error('Cannot create Discord account without a generated email.');
         }
 
-        const accounts = await this.readAccounts();
-        const existingDiscordIndex = accounts.findIndex(acc => this.normalizeDiscordId(acc.discordId) === discordId);
-        if (existingDiscordIndex >= 0) {
-            const account = this.applyDiscordProfile(accounts[existingDiscordIndex], discordUser, sponsor);
-            accounts[existingDiscordIndex] = account;
-            await fs.writeFile(this.accountsPath, JSON.stringify(accounts, null, 2));
+        return this.mutateAccounts(async (accounts) => {
+            const existingDiscordIndex = accounts.findIndex(acc => this.normalizeDiscordId(acc.discordId) === discordId);
+            if (existingDiscordIndex >= 0) {
+                const account = this.applyDiscordProfile(accounts[existingDiscordIndex], discordUser, sponsor);
+                accounts[existingDiscordIndex] = account;
+                return account;
+            }
+
+            const existingEmailOwner = accounts.find(acc => this.accountMatchesEmail(acc, normalizedEmail));
+            if (existingEmailOwner) {
+                throw new Error('Discord-derived account email is already used by another game account.');
+            }
+
+            const maxId = accounts.length > 0 ? Math.max(...accounts.map(a => a.user_id)) : 0;
+            const newId = maxId + 1;
+            const aliases = discordEmail !== normalizedEmail &&
+                !accounts.some(acc => this.accountMatchesEmail(acc, discordEmail))
+                ? [discordEmail]
+                : [];
+            const account = this.applyDiscordProfile({
+                email: normalizedEmail,
+                ...(aliases.length > 0 ? { emailAliases: aliases } : {}),
+                user_id: newId,
+                accountSource: 'discord_oauth'
+            }, discordUser, sponsor);
+
+            await this.performSaveCharacters(newId, [], path.join(this.savesDir, `${newId}.json`));
+            accounts.push(account);
             return account;
-        }
-
-        const existingEmailOwner = accounts.find(acc => this.accountMatchesEmail(acc, normalizedEmail));
-        if (existingEmailOwner) {
-            throw new Error('Discord-derived account email is already used by another game account.');
-        }
-
-        const maxId = accounts.length > 0 ? Math.max(...accounts.map(a => a.user_id)) : 0;
-        const newId = maxId + 1;
-        const aliases = discordEmail !== normalizedEmail &&
-            !accounts.some(acc => this.accountMatchesEmail(acc, discordEmail))
-            ? [discordEmail]
-            : [];
-        const account = this.applyDiscordProfile({
-            email: normalizedEmail,
-            ...(aliases.length > 0 ? { emailAliases: aliases } : {}),
-            user_id: newId,
-            accountSource: 'discord_oauth'
-        }, discordUser, sponsor);
-
-        accounts.push(account);
-        await fs.writeFile(this.accountsPath, JSON.stringify(accounts, null, 2));
-
-        const saveData: UserSaveData = { user_id: newId, characters: [] };
-        await fs.writeFile(path.join(this.savesDir, `${newId}.json`), JSON.stringify(saveData, null, 2));
-
-        return account;
+        });
     }
 
     public async createAccount(email: string, passwordRecord: PasswordRecord): Promise<UserAccount> {
@@ -529,28 +691,24 @@ export class JsonAdapter implements IDatabase {
             throw new Error('Cannot create account without an email.');
         }
 
-        const accounts = await this.readAccounts();
+        return this.mutateAccounts(async (accounts) => {
+            const existing = accounts.find(acc => this.accountMatchesEmail(acc, normalizedEmail));
+            if (existing) {
+                throw new Error('Account already exists.');
+            }
 
-        const existing = accounts.find(acc => this.accountMatchesEmail(acc, normalizedEmail));
-        if (existing) {
-            throw new Error('Account already exists.');
-        }
+            const maxId = accounts.length > 0 ? Math.max(...accounts.map(a => a.user_id)) : 0;
+            const newId = maxId + 1;
+            const account: UserAccount = {
+                email: normalizedEmail,
+                user_id: newId,
+                ...passwordRecord
+            };
 
-        const maxId = accounts.length > 0 ? Math.max(...accounts.map(a => a.user_id)) : 0;
-        const newId = maxId + 1;
-        const account: UserAccount = {
-            email: normalizedEmail,
-            user_id: newId,
-            ...passwordRecord
-        };
-
-        accounts.push(account);
-        await fs.writeFile(this.accountsPath, JSON.stringify(accounts, null, 2));
-
-        const saveData: UserSaveData = { user_id: newId, characters: [] };
-        await fs.writeFile(path.join(this.savesDir, `${newId}.json`), JSON.stringify(saveData, null, 2));
-
-        return account;
+            await this.performSaveCharacters(newId, [], path.join(this.savesDir, `${newId}.json`));
+            accounts.push(account);
+            return account;
+        });
     }
 
     public async updateAccountPassword(email: string, passwordRecord: PasswordRecord): Promise<UserAccount | null> {
@@ -564,24 +722,24 @@ export class JsonAdapter implements IDatabase {
             return null;
         }
 
-        const accounts = await this.readAccounts();
-        const index = accounts.findIndex(acc => this.accountMatchesEmail(acc, normalizedEmail));
-        if (index < 0) {
-            return null;
-        }
+        return this.mutateAccounts((accounts) => {
+            const index = accounts.findIndex(acc => this.accountMatchesEmail(acc, normalizedEmail));
+            if (index < 0) {
+                return null;
+            }
 
-        const existingAccount = accounts[index] as UserAccount & { password?: unknown };
-        const { password: _plaintextPassword, ...safeExistingAccount } = existingAccount;
-        const emailAliases = this.normalizeEmailAliases(safeExistingAccount.emailAliases);
-        const account: UserAccount = {
-            ...safeExistingAccount,
-            email: normalizeAccountIdentifier(safeExistingAccount.email) || normalizedEmail,
-            ...(emailAliases.length > 0 ? { emailAliases } : {}),
-            ...passwordRecord
-        };
-        accounts[index] = account;
-        await fs.writeFile(this.accountsPath, JSON.stringify(accounts, null, 2));
-        return account;
+            const existingAccount = accounts[index] as UserAccount & { password?: unknown };
+            const { password: _plaintextPassword, ...safeExistingAccount } = existingAccount;
+            const emailAliases = this.normalizeEmailAliases(safeExistingAccount.emailAliases);
+            const account: UserAccount = {
+                ...safeExistingAccount,
+                email: normalizeAccountIdentifier(safeExistingAccount.email) || normalizedEmail,
+                ...(emailAliases.length > 0 ? { emailAliases } : {}),
+                ...passwordRecord
+            };
+            accounts[index] = account;
+            return account;
+        });
     }
 
     public async loadCharacters(userId: number): Promise<Character[]> {

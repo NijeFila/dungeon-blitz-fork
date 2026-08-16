@@ -1,5 +1,7 @@
 const { spawn } = require('child_process');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 const ANSI_PATTERN = /\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g;
 
@@ -23,6 +25,7 @@ const readiness = {
     staticServer: false
 };
 let printedUrls = false;
+let openedFlashBrowser = false;
 let staticServerCheckStarted = false;
 
 function checkStaticServerReady() {
@@ -78,6 +81,35 @@ function maybePrintUrls() {
 
     printedUrls = true;
     process.stdout.write(`Flash Player URL:\n${flashPlayerUrl}\n\nFlash Browser URL:\n${flashBrowserUrl}\n`);
+    openFlashBrowser();
+}
+
+function openFlashBrowser() {
+    if (openedFlashBrowser || process.platform !== 'win32' || process.env.FLASH_BROWSER_AUTO_OPEN === '0') return;
+    openedFlashBrowser = true;
+    const candidates = [
+        process.env.FLASH_BROWSER_EXECUTABLE,
+        process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'Programs', 'FlashBrowser', 'FlashBrowser.exe'),
+        process.env.PROGRAMFILES && path.join(process.env.PROGRAMFILES, 'FlashBrowser', 'FlashBrowser.exe')
+    ].filter(Boolean);
+    const executable = candidates.find(candidate => fs.existsSync(candidate));
+    if (!executable) {
+        process.stdout.write(
+            `\n[launcher] FlashBrowser was not found. Install it or set FLASH_BROWSER_EXECUTABLE, then open ${flashBrowserUrl} manually.\n`
+        );
+        return;
+    }
+    try {
+        const browser = spawn(executable, [flashBrowserUrl], {
+            detached: true,
+            stdio: 'ignore',
+            windowsHide: false
+        });
+        browser.unref();
+        process.stdout.write(`[launcher] Opened ${flashBrowserUrl} in FlashBrowser.\n`);
+    } catch (error) {
+        process.stdout.write(`[launcher] Could not open FlashBrowser: ${error.message}. Open ${flashBrowserUrl} manually.\n`);
+    }
 }
 
 function handleLine(line) {

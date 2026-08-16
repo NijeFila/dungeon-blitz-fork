@@ -4340,6 +4340,12 @@ export class EntityHandler {
         return Array.from(removedEntityIds);
     }
 
+    static disposeLevelScopeCaches(levelScope: string): void {
+        const scope = String(levelScope ?? '').trim();
+        EntityHandler.serverAuthorityDestroyedIdsByScope.delete(scope);
+        EntityHandler.serverAuthorityDestroyedFingerprintsByScope.delete(scope);
+    }
+
     private static sendExistingPlayersToJoiner(joiner: Client): void {
         for (const other of GlobalState.getSessionsInLevelScope(getClientLevelScope(joiner))) {
             if (other === joiner) {
@@ -4459,3 +4465,5 @@ export class EntityHandler {
         }
     }
 }
+
+GlobalState.registerLevelScopeDisposer(EntityHandler.disposeLevelScopeCaches);

@@ -285,3 +285,5 @@ export function clearBossAuthority(levelScope: string | null | undefined): void 
 export function clearAllBossAuthority(): void {
     bossRecordsByScope.clear();
 }
+
+GlobalState.registerLevelScopeDisposer(clearBossAuthority);

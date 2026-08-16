@@ -636,7 +636,11 @@ function patch(swfPath: string, verify: boolean, only: Only): void {
   }
 
   // Keep the cache token in step with whatever is actually on disk, even on a no-op run.
-  if (alreadyPatched === targets.length) { console.log(`${swfPath}: already patched (only=${only}).`); syncClientRev(swfPath); return; }
+  if (alreadyPatched === targets.length) {
+    console.log(`${swfPath}: already patched (only=${only}).`);
+    if (!verify) syncClientRev(swfPath);
+    return;
+  }
   if (alreadyPatched !== 0) throw new PatchError(`${swfPath}: partially patched; git checkout the SWF and re-run.`);
   if (verify) { console.log(`${swfPath}: WOULD PATCH -> only=${only} (${patches.length} byte patches).`); return; }
 

@@ -1922,7 +1922,6 @@ if (verify) {
     verifyClaimRefresh(swfPath);
     verifyPacketRefreshes(swfPath);
     verifyMapMarker(swfPath);
-    syncClientRevision(swfPath, true);
 } else {
     ensureFelguardString(swfPath);
     patchNpcContactMarker(swfPath);

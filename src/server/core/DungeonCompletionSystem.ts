@@ -231,14 +231,7 @@ export class DungeonCompletionSystem {
             return;
         }
 
-        GlobalState.dungeonCompletions.delete(levelScope);
-        GlobalState.levelQuestProgress.delete(levelScope);
-        TutorialDungeonMechanics.resetState(levelScope);
-        for (const key of [...GlobalState.dungeonCutscenes.keys()]) {
-            if (key.startsWith(`${levelScope}:`)) {
-                GlobalState.dungeonCutscenes.delete(key);
-            }
-        }
+        GlobalState.disposeLevelScope(levelScope);
     }
 
     static noteEntityDefeated(levelScope: string, entity: any, now: number = Date.now()): boolean {

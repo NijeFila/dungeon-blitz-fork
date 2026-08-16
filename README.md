@@ -1,135 +1,90 @@
-# 𝐃𝐮𝐧𝐠𝐞𝐨𝐧 𝐁𝐥𝐢𝐭𝐳: 𝐑
+# Dungeon Blitz: R
 
-Open-source fan revival project of Dungeon Blitz developed by The Minesa Studios.
+Dungeon Blitz: R is an open-source fan revival of Dungeon Blitz maintained by The Minesa Studios. It preserves the original game while adding multiplayer support, stability fixes, localization, balance changes, and quality-of-life improvements.
 
-## About
+## Play locally
 
-Dungeon Blitz: R aims to preserve and modernize the Dungeon Blitz experience while improving stability, maintainability, and multiplayer functionality.
+Requirements:
 
-The project focuses on:
+- [Node.js 24](https://nodejs.org/)
+- [FlashBrowser](https://github.com/radubirsan/FlashBrowser/releases/tag/v0.8), or another Flash-capable standalone client
+- Git is recommended for automatic launcher updates, but the server can run without it
 
-* Multiplayer support
-* Bug fixes and stability improvements
-* Localization
-* Gameplay balancing
-* Quality-of-life improvements
-* Community-driven development
+Launch the project with `dev-windows.bat` on Windows or `dev-mac.command` on macOS. The launcher reconciles dependencies whenever a lockfile changes, starts the game and Discord bridge, waits for readiness, and opens `http://localhost:8000/` in FlashBrowser. Set `FLASH_BROWSER_EXECUTABLE` on Windows or `FLASH_BROWSER_APP_NAME` on macOS if FlashBrowser is installed in a nonstandard location.
 
-## Project Status
+For a manual start:
 
-Active Development
-
-Current priorities:
-
-* Multiplayer implementation
-* Region completion
-* Gameplay balancing
-* Performance improvements
-
-## Recent dungeon fixes
-
-Release `1.24.11` documents the current server-side dungeon behavior:
-
-* **The Capstone (`AC_Mission6`)** - completion follows the Nephit encounter's real
-  multi-phase eye entities and waits for the final encounter state instead of treating a
-  persistent marker entity as the boss.
-* **Back Alley Deals (`JC_Mission2`)** - Mortis Golem and Seelie Ravager use reconciled
-  client/server health and terminal state. Both bosses must actually be defeated before the
-  completion cinematic and victory screen can begin.
-* **The Prodigal Son (`JC_Mission3`)** - the scripted actor is Prince Friedrich Hocke,
-  Sigismund's son. If a room transition or position correction places the player's first
-  accepted movement beyond one of Friedrich's authored wake-up triggers, the server now
-  recovers that trigger once so Friedrich does not remain stuck in `DeepSleep`.
-
-These are lifecycle and sequencing fixes. They do not skip bosses, force dungeon rewards, or
-mark encounters complete before their authored objectives are satisfied.
-
-## Playing single player
-
-Everything runs on your own machine — the server, the game files and your saves. No
-account on anyone else's server, no internet connection needed once it is set up.
-
-**You need two things first:**
-
-1. **[Node.js](https://nodejs.org/) (LTS)** — the game server runs on it.
-2. **A Flash-capable browser.** Dungeon Blitz is a Flash game and modern browsers dropped
-   Flash in 2020. The launchers expect
-   [FlashBrowser](https://github.com/radubirsan/FlashBrowser/releases/tag/v0.8); any
-   standalone Flash player pointed at `http://localhost:8000/` also works.
-
-**Then just run the launcher for your system:**
-
-| System | File |
-| --- | --- |
-| macOS | `dev-mac.command` (double-click, or `./dev-mac.command` in Terminal) |
-| Windows | `dev-windows.bat` (double-click) |
-
-The launcher pulls the latest code, stashing your local saves first, installs
-dependencies, starts the server, and opens the game at `http://localhost:8000/` once it
-is listening. Leave the terminal window open while you play — closing it stops the server.
-
-Prefer to drive it yourself?
-
-```bash
+```sh
 npm install
+npm install --prefix src/server
 npm run dev
 ```
 
-Then point your Flash browser at `http://localhost:8000/`.
+Then open `http://localhost:8000/`. The direct SWF URL is `http://localhost:8000/p/cbp/DungeonBlitz.swf?fv=cbp&gv=cbp`.
 
-**Making a character.** Register any email and password on the login screen — it is your
-local server, so the account is created on the spot and stored in
-`src/server/data/Accounts.json`. Your characters live in `src/server/data/saves/`, which
-git ignores, so updating the project never overwrites your progress.
+### Local accounts and saves
 
-If you would rather skip straight to the content, the seeder below gives you a
-fully-completed character in every class.
+Runtime accounts live in ignored `src/server/data/Accounts.json`; characters live in ignored `src/server/data/saves/`. Registration, password changes, and gameplay therefore do not modify tracked files.
 
-**If it does not start:**
+A fresh clone materializes the explicitly synthetic `1@gmail.com` fixture and its `RendzerA` save on first use. Existing runtime files are never overwritten. For broader testing, run:
 
-| Symptom | Cause |
-| --- | --- |
-| `ERROR: Node.js is not installed or not on PATH` | Install Node.js LTS and re-run the launcher. |
-| Browser opens but the page is blank | Flash is not enabled in that browser. Use FlashBrowser or a standalone Flash player. |
-| Port 8000 already in use | Another copy of the server is still running. Close its terminal window. |
-| The launcher stashed your changes and you want them back | `git stash list`, then `git stash pop` — the launcher labels its stashes with a timestamp. |
-
-The same walkthrough, starting from the clone, is on the
-[How to play](https://github.com/theminesastudios/dungeon-blitz-r/wiki/How-to-play-Dungeon-Blitz%3F)
-wiki page.
-
-## Playtest account
-
-For local testing there is a seeder that creates `test@theminesa.studio` with six
-characters — one fully-completed and one brand new for each of the three classes:
-
-```bash
-cd src/server && npm run seed:test-account
+```sh
+cd src/server
+npm run seed:test-account
 ```
 
-| Character | Class | State |
-| --- | --- | --- |
-| `MaxMage` / `MaxPaladin` / `MaxRogue` | Mage / Paladin / Rogue | Level 50, all 293 missions claimed, all 39 class abilities at rank 10, maxed talents and buildings, every mount, pet, charm, dye and material |
-| `NewMage` / `NewPaladin` / `NewRogue` | Mage / Paladin / Rogue | Level 1, zero of everything |
+This creates or refreshes `test@theminesa.studio` with `MaxMage`, `MaxPaladin`, `MaxRogue`, `NewMage`, `NewPaladin`, and `NewRogue`. The default password is `testtest`; override it with `TEST_ACCOUNT_PASSWORD`. The seeder refuses to run in multiplayer mode.
 
-The password defaults to `testtest`; override it with `TEST_ACCOUNT_PASSWORD`. Re-running
-the seeder is safe — it reuses the account and rewrites the six characters.
+### Troubleshooting
 
-The seeder **refuses to run when `MULTIPLAYER_MODE` is set**. It writes a known password
-and a character holding every unlock in the game, which is local-play-only by nature.
+| Symptom | Resolution |
+| --- | --- |
+| Node/npm is not found | Install Node.js 24 and restart the launcher. |
+| FlashBrowser is not found | Install it or set the platform-specific environment variable above, then open the local URL manually. |
+| Port 8000 or 8080 is in use | Stop the previous server or configure another static/game port. |
+| Dependencies fail after an update | Delete only the affected `node_modules/.dungeon-blitz-lock.sha256` marker and rerun the launcher. |
+| A local update was stashed | Inspect `git stash list`, then restore the labelled launcher stash with `git stash pop`. |
 
-It writes to `src/server/data/Accounts.json`, which is tracked by git. Leave that change
-out of your commits: the matching save file lives in the untracked `saves/` directory, so
-a committed account row would be an empty account plus a published password hash.
+## Recent gameplay reliability work
+
+- Back Alley Deals (`JC_Mission2` normal and hard): Mortis Golem and Seelie Ravager now enter permanent terminal state independently of the later room-clear signal. Healing/revival cannot undo a verified death, while victory still requires both bosses, the authored room-clear signal, and the completion cinematic.
+- The Capstone (`AC_Mission6`): completion follows the encounter's real multi-phase eye entities instead of a persistent marker.
+- The Prodigal Son (`JC_Mission3`): Prince Friedrich Hocke recovers his authored wake-up trigger if a room transition skips it, preventing the actor from remaining stuck.
+- Mammoth Idols no longer route purchases to the retired payment page.
+
+## Administration
+
+The optional admin console is loopback-only and requires a shared secret:
+
+```sh
+set ADMIN_CONTROL_SECRET=replace-with-a-long-random-secret
+npm run admin
+```
+
+On PowerShell use `$env:ADMIN_CONTROL_SECRET='...'`; on macOS/Linux use `export ADMIN_CONTROL_SECRET='...'`. The console refuses to start without a secret. Keep it on loopback; use an authenticated tunnel if remote access is required. Destructive actions require confirmation and runtime settings are temporary.
+
+## Development and verification
+
+```sh
+npm run build
+npm run verify:client-patches
+npm run test:regression --prefix src/server
+```
+
+Client verification is read-only. Release CI provisions a pinned FFDec build and treats unavailable verification tools as a failure. Regression tests have per-test timeouts, JUnit output, and optional sharding through `TEST_SHARD_TOTAL` and `TEST_SHARD_INDEX`.
 
 ## Documentation
 
-Project documentation can be found in the Wiki.
+Start with the tracked [documentation index](docs/README.md):
+
+- [Hosting, backup, restore, upgrades, and rollback](docs/HOSTING.md)
+- [Security policy](docs/SECURITY.md)
+- [Complete project audit](AUDIT.md)
+- [Audit remediation plan](AUDIT-PLAN.md)
+- [Changelog](CHANGELOG.md)
+
+The community [How to play wiki](https://github.com/theminesastudios/dungeon-blitz-r/wiki/How-to-play-Dungeon-Blitz%3F) remains available for additional screenshots and walkthroughs.
 
 ## Disclaimer
 
-Dungeon Blitz: R is a fan-made revival project.
-
-Dungeon Blitz and all original assets, trademarks, artwork, audio, characters, and intellectual property belong to their respective owners.
-
-This repository only licenses original code and modifications created by The Minesa Studios and project contributors.
+Dungeon Blitz: R is a fan-made revival. Dungeon Blitz and all original assets, trademarks, artwork, audio, characters, and intellectual property belong to their respective owners. This repository licenses only original code and modifications created by The Minesa Studios and project contributors.

@@ -9,6 +9,7 @@ export class GameServer {
     private port: number;
     private host: string;
     private router: PacketRouter;
+    private readonly sockets = new Set<net.Socket>();
 
     constructor(port: number = 8080, router: PacketRouter, host: string = Config.BIND_HOST) {
         this.port = port;
@@ -37,13 +38,24 @@ export class GameServer {
         });
     }
 
+    public isListening(): boolean {
+        return this.server.listening;
+    }
+
     public stop(): Promise<void> {
         if (!this.server.listening) {
             return Promise.resolve();
         }
 
+        for (const socket of this.sockets) socket.end();
+        const forceClose = setTimeout(() => {
+            for (const socket of this.sockets) socket.destroy();
+        }, 5_000);
+        forceClose.unref?.();
+
         return new Promise((resolve, reject) => {
             this.server.close((error) => {
+                clearTimeout(forceClose);
                 if (error) {
                     reject(error);
                     return;
@@ -60,6 +72,8 @@ export class GameServer {
         socket.setKeepAlive(true);
         const client = new Client(socket, this.router);
         GlobalState.clients.add(client);
+        this.sockets.add(socket);
+        socket.once('close', () => this.sockets.delete(socket));
         const addr = `${socket.remoteAddress}:${socket.remotePort}`;
         console.log(`[GameServer] Client connected: ${addr}`);
     }

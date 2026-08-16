@@ -128,6 +128,14 @@ export function clearOpenBossScene(levelScope: string): void {
     openBossScenesByScope.delete(String(levelScope ?? '').trim());
 }
 
+export function clearRoomBossScope(levelScope: string): void {
+    const scope = String(levelScope ?? '').trim();
+    roomBossMarkersByScope.delete(scope);
+    openBossScenesByScope.delete(scope);
+}
+
+GlobalState.registerLevelScopeDisposer(clearRoomBossScope);
+
 export function isRoomBossEntity(levelScope: string, entity: any): boolean {
     if (!levelScope || !entity || typeof entity !== 'object') {
         return false;

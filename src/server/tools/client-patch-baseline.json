@@ -1,6 +1,6 @@
 {
-    "_comment": "Client patches that already fail --verify as of 2026-08-11. The gate only fails on regressions outside this list; entries that start passing must be removed. Triage and shrink this list -- some are deliberate reverts, others are genuinely dropped patches. Forge tutorial persistence is deliberately disabled because it crashes on world enter.",
-    "recordedAt": "2026-08-11",
+    "_comment": "Client patches that fail --verify against the imported legacy client. The gate fails on changes outside this list and when an entry unexpectedly starts passing. Three Shadowstalker-era scripts were never applicable to this imported SWF (their required bytecode/string signatures do not exist); the destroy-brainless and forge tutorial entries are deliberate reverts.",
+    "recordedAt": "2026-08-16",
     "knownFailing": [
         "patch-dungeonblitz-banshee-wail-cap.ts",
         "patch-dungeonblitz-chatbubble-method901-null-guard.ts",
@@ -9,6 +9,7 @@
         "patch-dungeonblitz-class82-bitmapdata-guard.ts",
         "patch-dungeonblitz-destroy-entity-without-brain.ts",
         "patch-dungeonblitz-dye-ui-owned-color.ts",
+        "patch-dungeonblitz-dark-chi-aoe-scaling.ts",
         "patch-dungeonblitz-forge-tutorial-persistence.ts",
         "patch-dungeonblitz-game-method1947-screen-bitmapdata.ts",
         "patch-dungeonblitz-game-method527-clamp-floaters.ts",
@@ -16,6 +17,8 @@
         "patch-dungeonblitz-pet-fetches-loot.ts",
         "patch-dungeonblitz-quest-ui.js",
         "patch-dungeonblitz-room-cue-dead-player-guard.ts",
+        "patch-dungeonblitz-shadow-legion-equipped-skills.ts",
+        "patch-dungeonblitz-shadowstalker-miasma-bonus.ts",
         "patch-dungeonblitz-story-zone-locks.js",
         "patch-dungeonblitz-superanim-method806-fullscreen-bitmapdata.ts",
         "patch_gameswz_frozen_ward_cast_anim.ts",

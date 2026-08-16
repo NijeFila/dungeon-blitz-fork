@@ -542,3 +542,5 @@ export class LegendsInn {
         return String(value ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
     }
 }
+
+GlobalState.registerLevelScopeDisposer((levelScope) => LegendsInn.resetScope(levelScope));

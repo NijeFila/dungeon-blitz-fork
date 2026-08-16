@@ -15,6 +15,38 @@ const serverDir = path.resolve(__dirname, '..');
 // Deploys run this on the live box while players are connected, so leave a core for the game
 // server rather than saturating every one of them for the ~2 minutes the sweep takes.
 const concurrency = Math.max(1, Math.min(8, os.cpus().length - 1));
+const immutableRoots = [
+    path.resolve(serverDir, '..', 'client', 'content'),
+    path.resolve(serverDir, 'data')
+];
+
+function snapshotFiles(roots) {
+    const snapshot = new Map();
+    const visit = (entryPath) => {
+        const stat = fs.statSync(entryPath);
+        if (stat.isDirectory()) {
+            for (const name of fs.readdirSync(entryPath).sort()) {
+                visit(path.join(entryPath, name));
+            }
+            return;
+        }
+        snapshot.set(entryPath, `${stat.size}:${stat.mtimeMs}`);
+    };
+    for (const root of roots) {
+        if (fs.existsSync(root)) visit(root);
+    }
+    return snapshot;
+}
+
+function assertUnchanged(before, after) {
+    const paths = new Set([...before.keys(), ...after.keys()]);
+    const changed = [...paths].filter((entryPath) => before.get(entryPath) !== after.get(entryPath));
+    if (changed.length > 0) {
+        throw new Error(
+            `Verification mutated ${changed.length} client/data file(s):\n${changed.slice(0, 20).join('\n')}`
+        );
+    }
+}
 
 function discoverVerifiableScripts() {
     return fs
@@ -71,10 +103,12 @@ async function runAll(names) {
 }
 
 async function main() {
+    const before = snapshotFiles(immutableRoots);
     const names = discoverVerifiableScripts();
     if (names.length === 0) {
         console.error('[verify-patches] No verifiable patch scripts found -- expected scripts/patch*.{ts,js}');
         process.exitCode = 1;
+        assertUnchanged(before, snapshotFiles(immutableRoots));
         return;
     }
 
@@ -107,6 +141,12 @@ async function main() {
             `[verify-patches] ${skipped.length} patch(es) could not be checked (FFDec unavailable): ` +
             skipped.map((entry) => entry.name).sort().join(', ')
         );
+        if (process.env.VERIFY_CLIENT_PATCHES_REQUIRE_TOOLS === '1') {
+            console.error('[verify-patches] Required verifier tooling is unavailable; strict verification cannot pass.');
+            assertUnchanged(before, snapshotFiles(immutableRoots));
+            process.exitCode = 1;
+            return;
+        }
     }
 
     const regressions = failures.filter((result) => !baseline.has(result.name));
@@ -125,6 +165,7 @@ async function main() {
             `[verify-patches] ${checked - failures.length}/${checked} checkable patches present; ` +
             `${failures.length} known-failing (baseline). No new losses.`
         );
+        assertUnchanged(before, snapshotFiles(immutableRoots));
         return;
     }
 
@@ -140,6 +181,7 @@ async function main() {
         );
     }
 
+    assertUnchanged(before, snapshotFiles(immutableRoots));
     process.exitCode = 1;
 }
 

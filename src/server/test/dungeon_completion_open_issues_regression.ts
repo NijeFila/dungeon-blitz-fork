@@ -109,6 +109,13 @@ function verifyIssueLevel(issue: number, levelName: string, ordinal: number): vo
     if (condition.mode === 'full-clear' || condition.autoCompleteOnObjectives === false) {
         DungeonCompletionSystem.noteClientCompletionSignal(levelScope, participantKey, 100, now++);
     }
+    if (condition.requireRoomBossClearSignal) {
+        assert.equal(
+            DungeonCompletionSystem.noteRoomBossClear(levelScope, 99, now++),
+            true,
+            `#${issue} ${levelName}: rejected its authored room-boss clear signal`
+        );
+    }
     if (condition.cutscene?.requiredAfterObjectives) {
         assert.equal(
             DungeonCompletionSystem.evaluate(levelScope, now).ready,

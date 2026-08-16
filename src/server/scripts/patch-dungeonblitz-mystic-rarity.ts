@@ -1144,7 +1144,7 @@ function patch(swfPath: string, verify: boolean, only: Only): void {
 
   if (done.length === 0) {
     console.log(`${swfPath}: already patched (only=${only}).`);
-    syncClientRev(swfPath);
+    if (!verify) syncClientRev(swfPath);
     return;
   }
   if (verify) {

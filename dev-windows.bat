@@ -109,40 +109,15 @@ echo npm:
 call npm -v
 echo.
 
-:: Root dependencies
-if not exist node_modules\.bin\concurrently.cmd (
-    echo Installing root dependencies...
-    call npm install --include=dev
-    if !errorlevel! neq 0 (
-        echo.
-        echo ERROR: Root dependency install failed.
-        pause
-        exit /b !errorlevel!
-    )
+:: Reconcile dependencies whenever either lockfile changes.
+node tools\ensureDependencies.js . src\server
+if !errorlevel! neq 0 (
     echo.
-) else (
-    echo Root dependencies already installed; skipping.
-    echo.
+    echo ERROR: Dependency reconciliation failed.
+    pause
+    exit /b !errorlevel!
 )
-
-:: Server dependencies
-if not exist src\server\node_modules\.bin\nodemon.cmd (
-    echo Installing server dependencies...
-    cd src\server
-    call npm install --include=dev
-    if !errorlevel! neq 0 (
-        cd /d "%~dp0"
-        echo.
-        echo ERROR: Server dependency install failed.
-        pause
-        exit /b !errorlevel!
-    )
-    cd /d "%~dp0"
-    echo.
-) else (
-    echo Server dependencies already installed; skipping.
-    echo.
-)
+echo.
 
 set BRIDGE_DIR=%CD%\src\server\native_bridge
 set BRIDGE_SDK_DIR=%BRIDGE_DIR%\discord_social_sdk

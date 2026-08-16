@@ -220,13 +220,20 @@ router.register(0x106, SigilHandler.handleRoyalSigilStorePurchase);
 router.register(0x115, MammothIdolHandler.handlePackageSelection);
 
 let policyServer: PolicyServer | null = null;
-const staticServer = new StaticServer(Config.STATIC_PORT, '../client/content/localhost', Config.BIND_HOST);
+const gameServer = new GameServer(Config.PORTS[0], router, Config.BIND_HOST);
+let persistenceReady = false;
+const staticServer = new StaticServer(
+    Config.STATIC_PORT,
+    '../client/content/localhost',
+    Config.BIND_HOST,
+    () => ({ persistence: persistenceReady, gameSocket: gameServer.isListening() })
+);
 registerDiscordMaintenanceApi(staticServer);
 registerAdminControlApi(staticServer);
-const gameServer = new GameServer(Config.PORTS[0], router, Config.BIND_HOST);
 
 async function startServers(): Promise<void> {
     await JsonAdapter.initializeMongoGameData();
+    persistenceReady = true;
 
     if (Config.ENABLE_POLICY_SERVER) {
         policyServer = new PolicyServer(Config.POLICY_PORT, Config.BIND_HOST);
@@ -255,6 +262,8 @@ function shutdown(signal: string, exitCode: number, onComplete?: () => void): vo
     }
 
     isShuttingDown = true;
+    persistenceReady = false;
+    AILogic.stop();
     console.log(`[System] Received ${signal}; shutting down servers.`);
 
     const tasks = [

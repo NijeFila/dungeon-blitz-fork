@@ -209,23 +209,12 @@ echo "Node: $(node -v)"
 echo "npm:  $(npm -v)"
 echo
 
-if [[ ! -d "node_modules" ]]; then
-  echo "Installing root dependencies..."
-  npm install
-  echo
-else
-  echo "Root dependencies already installed; skipping."
-  echo
+if ! node tools/ensureDependencies.js . src/server; then
+  echo "ERROR: Dependency reconciliation failed."
+  read -r -p "Press Enter to close..."
+  exit 1
 fi
-
-if [[ ! -d "src/server/node_modules" ]]; then
-  echo "Installing server dependencies..."
-  (cd "src/server" && npm install)
-  echo
-else
-  echo "Server dependencies already installed; skipping."
-  echo
-fi
+echo
 
 BRIDGE_DIR="$ROOT_DIR/src/server/native_bridge"
 BRIDGE_SDK_DIR="$BRIDGE_DIR/discord_social_sdk"

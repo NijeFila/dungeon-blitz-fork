@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <a class="skip-link" href="#overview">Ana içeriğe geç</a>
   <div class="page-glow" aria-hidden="true"></div>
   <div class="app-shell">
     <aside class="sidebar">
@@ -20,7 +21,7 @@
 
       <nav class="nav" aria-label="Ana navigasyon">
         <p class="nav-label">Workspace</p>
-        <a class="nav-item active" href="#overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Genel Bakış</span></a>
+        <a class="nav-item active" href="#overview" aria-current="location"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Genel Bakış</span></a>
         <a class="nav-item" href="#players-panel"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg><span>Oyuncular</span><span id="navPlayerCount" class="nav-badge">0</span></a>
         <a class="nav-item" href="#rooms-panel"><svg viewBox="0 0 24 24"><path d="m3 6 9-4 9 4-9 4-9-4Z"/><path d="m3 12 9 4 9-4M3 18l9 4 9-4"/></svg><span>Canlı Odalar</span></a>
         <a class="nav-item" href="#settings-panel"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg><span>Oyun Kuralları</span></a>
@@ -32,7 +33,7 @@
       </div>
     </aside>
 
-    <main class="main" id="overview">
+    <main class="main" id="overview" tabindex="-1">
       <header class="topbar">
         <div>
           <div class="breadcrumb"><span>Command Deck</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg><strong>Genel Bakış</strong></div>
@@ -98,11 +99,21 @@
         <article class="card announce-card">
           <div class="announce-icon"><svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 13v-2ZM11.6 15.4 13 21H7l-1.7-7"/></svg></div>
           <div class="announce-copy"><h2>Sunucu Duyurusu</h2><p>Tüm çevrimiçi oyunculara anlık mesaj gönder.</p></div>
-          <form id="announceForm"><input id="announcement" maxlength="240" placeholder="Duyuru mesajınızı yazın…" aria-label="Duyuru mesajı"><button class="button button-primary" type="submit">Gönder<svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></button></form>
+          <form id="announceForm"><label class="visually-hidden" for="announcement">Duyuru mesajı</label><input id="announcement" maxlength="240" autocomplete="off" placeholder="Duyuru mesajınızı yazın…"><button class="button button-primary" type="submit">Gönder<svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></button></form>
         </article>
       </section>
     </main>
   </div>
+  <dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+    <form method="dialog">
+      <h2 id="confirmTitle">İşlemi onayla</h2>
+      <p id="confirmMessage"></p>
+      <div class="dialog-actions">
+        <button class="button button-ghost" value="cancel">Vazgeç</button>
+        <button id="confirmSubmit" class="button button-destructive" value="confirm">Onayla</button>
+      </div>
+    </form>
+  </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>

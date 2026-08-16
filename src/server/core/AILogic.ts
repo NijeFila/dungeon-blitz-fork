@@ -16,6 +16,7 @@ import { AdminRuntimeSettings } from './AdminRuntimeSettings';
 
 
 export class AILogic {
+    private static timer: NodeJS.Timeout | null = null;
     static readonly INTERVAL = 125; // ms (0.125s)
     static readonly TIMESTEP = 1 / 60.0;
     // Aggro radii, halved from their original values (240/360/180/260) so enemies
@@ -225,8 +226,15 @@ export class AILogic {
 
     // Run AI loop for all levels
     static start() {
-        const timer = setInterval(() => AILogic.runTick(), AILogic.INTERVAL);
-        timer.unref?.();
+        if (AILogic.timer) return;
+        AILogic.timer = setInterval(() => AILogic.runTick(), AILogic.INTERVAL);
+        AILogic.timer.unref?.();
+    }
+
+    static stop(): void {
+        if (!AILogic.timer) return;
+        clearInterval(AILogic.timer);
+        AILogic.timer = null;
     }
 
     static runTick(): void {

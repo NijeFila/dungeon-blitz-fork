@@ -5,6 +5,10 @@
 
 version: 2
 updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "npm" # Manages dependencies defined in package.json and package-lock.json
     directory: "/src/server" # Location of package manifests
     schedule:

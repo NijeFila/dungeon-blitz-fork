@@ -145,6 +145,10 @@ function main(): void {
 
   const homeSymbols = readSymbolClasses(home);
   if (homeSymbols.some((entry) => entry.name === DOOR_CLASS)) {
+    if (verify && homeSymbols.some((entry) => entry.name === ART_CLASS)) {
+      console.log(`${HOME_SWF}: verified (${DOOR_CLASS} and ${ART_CLASS} are present).`);
+      return;
+    }
     throw new SwfLevelError(`${DOOR_CLASS} already exists in LevelsHome.swf - patch already applied?`);
   }
 

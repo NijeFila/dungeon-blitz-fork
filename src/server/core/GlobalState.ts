@@ -204,8 +204,46 @@ export class GlobalState {
     static combatContributions: Map<string, Map<string, number>> = new Map();
     static entityLifeNonces: Map<string, number> = new Map();
     static entityLastRewardNonces: Map<string, number> = new Map();
+    private static readonly levelScopeDisposers = new Set<(levelScope: string) => void>();
     // Level Name -> LevelInstance (if needed) or just keys of levelEntities
     static levelRegistry: { [key: string]: any } = {};
+
+    static registerLevelScopeDisposer(disposer: (levelScope: string) => void): () => void {
+        GlobalState.levelScopeDisposers.add(disposer);
+        return () => GlobalState.levelScopeDisposers.delete(disposer);
+    }
+
+    static disposeLevelScope(levelScope: string | null | undefined): void {
+        const scope = String(levelScope ?? '').trim();
+        if (!scope) {
+            return;
+        }
+
+        GlobalState.levelEntities.delete(scope);
+        GlobalState.levelQuestProgress.delete(scope);
+        GlobalState.dungeonCompletions.delete(scope);
+        GlobalState.tutorialDungeonWorldStates.delete(scope);
+        GlobalState.deadServerAuthorityHostilesByScope.delete(scope);
+        GlobalState.sessionsByLevelScope.delete(scope);
+        GlobalState.sessionsByRoom.delete(scope);
+        for (const key of [...GlobalState.dungeonCutscenes.keys()]) {
+            if (key.startsWith(`${scope}:`)) GlobalState.dungeonCutscenes.delete(key);
+        }
+        for (const map of [
+            GlobalState.combatContributions,
+            GlobalState.entityLifeNonces,
+            GlobalState.entityLastRewardNonces
+        ]) {
+            for (const key of [...map.keys()]) {
+                if (key.startsWith(`${scope}:`)) map.delete(key);
+            }
+        }
+        delete GlobalState.levelRegistry[scope];
+
+        for (const disposer of GlobalState.levelScopeDisposers) {
+            disposer(scope);
+        }
+    }
 
     private static deleteFromSessionSetIndex<K>(index: Map<K, Set<Client>>, key: K, session: Client): void {
         const sessions = index.get(key);

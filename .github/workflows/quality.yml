@@ -1,0 +1,72 @@
+name: Quality
+
+on:
+  workflow_call:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            src/server/package-lock.json
+      - name: Install dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm ci --ignore-scripts --prefix src/server
+      - name: Install pinned FFDec verifier
+        run: |
+          mkdir -p build/ffdec
+          curl --fail --location --retry 3 \
+            https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip \
+            --output /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d build/ffdec
+          chmod +x build/ffdec/ffdec.sh
+      - name: Typecheck
+        run: npm run typecheck --prefix src/server
+      - name: Build release runtime
+        run: npm run build --prefix src/server
+      - name: Regression suite
+        env:
+          JUNIT_OUTPUT: ${{ github.workspace }}/artifacts/regression.xml
+          TEST_TIMEOUT_MS: "180000"
+        run: npm run test:regression --prefix src/server
+      - name: Upload regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-results
+          path: artifacts/regression.xml
+      - name: Verify client patches without writes or skips
+        env:
+          VERIFY_CLIENT_PATCHES_REQUIRE_TOOLS: "1"
+          FFDEC_PATH: ${{ github.workspace }}/build/ffdec/ffdec.sh
+        run: npm run verify:client-patches --prefix src/server
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high --prefix src/server
+      - name: Assert verification did not mutate tracked sources
+        run: git diff --exit-code
+      - name: Package tested runtime
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/dungeon-blitz-runtime.tgz src/server/dist src/server/package.json src/client/content
+          sha256sum artifacts/dungeon-blitz-runtime.tgz > artifacts/dungeon-blitz-runtime.tgz.sha256
+      - name: Upload tested runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: tested-runtime
+          path: |
+            artifacts/dungeon-blitz-runtime.tgz
+            artifacts/dungeon-blitz-runtime.tgz.sha256

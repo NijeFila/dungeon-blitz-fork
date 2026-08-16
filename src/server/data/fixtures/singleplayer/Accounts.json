@@ -1,0 +1,15 @@
+[
+  {
+    "email": "1@gmail.com",
+    "user_id": 9,
+    "passwordKdf": "scrypt",
+    "passwordSalt": "mE3vTEagIXw//NdnIOdlXQ==",
+    "passwordHash": "+HvRSZjUxHWD07WSWm268svWYbrrTTCaALfQzqRMPKrG6xxDtRog+rbyoATpJ6KU/rKrfJn/it30MeGsot+6Lg==",
+    "passwordParams": {
+      "N": 16384,
+      "r": 8,
+      "p": 1,
+      "keylen": 64
+    }
+  }
+]

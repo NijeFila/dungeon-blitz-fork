@@ -177,7 +177,8 @@ export class StaticServer {
     constructor(
         port: number = Config.STATIC_PORT,
         relativeContentPath: string = '../client/content/localhost',
-        host: string = Config.BIND_HOST
+        host: string = Config.BIND_HOST,
+        private readonly readinessProbe: () => Record<string, boolean> = () => ({ staticServer: true })
     ) {
         this.port = port;
         this.host = host;
@@ -410,9 +411,9 @@ export class StaticServer {
     <h1>Password Reset</h1>
     ${unavailable}
     ${safeMessage}
-    <form method="post" action="/lostpw" autocomplete="off">
+    <form method="post" action="/lostpw">
       <label for="email">Email</label>
-      <input id="email" name="email" type="email" required ${disabled}>
+      <input id="email" name="email" type="email" autocomplete="email" required ${disabled}>
       <button type="submit" ${disabled}>Send Discord password</button>
     </form>
     <p class="note">For Discord-linked accounts, the bot sends a fresh password by DM.</p>
@@ -454,7 +455,7 @@ try {
 <body>
   <main>
     <h1>${escapeHtml(title)}</h1>
-    <p class="message ${statusClass}">${escapeHtml(message)}</p>
+    <p class="message ${statusClass}" role="${isError ? 'alert' : 'status'}">${escapeHtml(message)}</p>
     <p><a href="/">Return to the game</a></p>
   </main>
   ${completionScript}
@@ -897,13 +898,18 @@ try {
             if (result.ok && result.reason === 'already-linked' && result.link) {
                 const discordName = result.link.discordGlobalName || result.link.discordUsername || result.link.discordId || 'Discord';
                 res.type('text/html').send(
-                    `<h1>Discord already linked</h1><p>${escapeHtml(discordName)} is already linked to ${escapeHtml(result.link.email)}.</p>`
+                    this.renderDiscordOAuthPage(
+                        'Discord Already Linked',
+                        `${discordName} is already linked to ${result.link.email}.`
+                    )
                 );
                 return;
             }
 
             if (!result.ok || !result.authorizeUrl) {
-                res.status(result.reason === 'not-configured' ? 503 : 400).type('text/plain').send(result.message ?? result.reason);
+                res.status(result.reason === 'not-configured' ? 503 : 400).type('text/html').send(
+                    this.renderDiscordOAuthPage('Discord Link Failed', result.message ?? result.reason, true)
+                );
                 return;
             }
 
@@ -950,7 +956,7 @@ try {
             res.setHeader('Cache-Control', 'no-store');
             if (!result.ok || !result.account) {
                 res.status(statusCode).type('text/html').send(
-                    `<h1>Discord link failed</h1><p>${escapeHtml(result.message ?? result.reason)}</p>`
+                    this.renderDiscordOAuthPage('Discord Link Failed', result.message ?? result.reason, true)
                 );
                 return;
             }
@@ -964,7 +970,7 @@ try {
                 result.account.discordId ||
                 'Discord';
             res.type('text/html').send(
-                `<h1>Discord linked</h1><p>${escapeHtml(discordName)} is now linked to ${escapeHtml(result.account.email)}.</p>`
+                this.renderDiscordOAuthPage('Discord Linked', `${discordName} is now linked to ${result.account.email}.`)
             );
         });
 
@@ -1058,16 +1064,20 @@ try {
         this.app.use(express.static(this.contentDir, { index: false }));
 
         this.app.get('/healthz', (_req, res) => {
-            res.type('text/plain');
+            const components = this.readinessProbe();
+            const ready = Object.values(components).every(Boolean);
+            res.status(ready ? 200 : 503);
+            res.type('application/json');
             res.setHeader('Cache-Control', 'no-store');
             res.setHeader('Connection', 'close');
-            res.send('ok');
+            res.send(JSON.stringify({ status: ready ? 'ready' : 'starting', components }));
         });
-        
-        // Debug route to check path
-        this.app.get('/debug-path', (req, res) => {
-            res.send(`Serving content from: ${this.contentDir}`);
-        });
+
+        if (StaticServer.shouldLog() && process.env.NODE_ENV !== 'production') {
+            this.app.get('/debug-path', (_req, res) => {
+                res.send(`Serving content from: ${this.contentDir}`);
+            });
+        }
     }
 
     public start(): void {

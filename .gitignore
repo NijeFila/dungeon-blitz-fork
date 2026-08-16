@@ -3,11 +3,14 @@ server_tapes
 src/server/dist
 src/server/Accounts.json
 src/server/saves/
+src/server/data/Accounts.json
+src/server/data/Accounts.json.bak
+src/server/data/Accounts.json.*.tmp
 src/server/data/saves/*
-!src/server/data/saves/9.json
 temp
 .DS_Store
 build/
+artifacts/
 logs/
 src/server/data/runtime/*crash*.log
 src/server/data/discord_account_links.json

@@ -169,7 +169,9 @@ function testClientHealingCannotRestoreBossHealth(
             boss.maxHp,
             `${levelName}: revive report erased the lethal damage record`
         );
-        assert.equal(sent.length, 1, `${levelName}: revive report was not corrected`);
+        assert.equal(sent.length, 2, `${levelName}: revive report did not receive both terminal corrections`);
+        assert.equal(sent[0].packetId, 0x78, `${levelName}: revive heal was not reversed`);
+        assert.equal(sent[1].packetId, 0x07, `${levelName}: terminal dead state was not reasserted`);
         assert.equal(sent[0].packetId, 0x78, `${levelName}: revive heal was not reversed`);
     } finally {
         GlobalState.sessionsByToken.delete(token);
@@ -323,8 +325,10 @@ async function testFullBackAlleyEncounterCompletes(): Promise<void> {
     GlobalState.sessionsByToken.set(token, client as never);
 
     try {
-        // Reaching the server's estimated HP pool is not terminal proof in this
-        // authored fight: both bosses can heal or enter a temporary down phase.
+        // Exhausting an individual boss's verified health pool must commit that
+        // boss's terminal death immediately. Dungeon victory remains separately
+        // gated by both boss deaths, the authored room-clear signal, and the
+        // post-boss cinematic.
         for (const boss of bosses) {
             (CombatHandler as any).recordClientHostileHpDelta(
                 client,
@@ -336,33 +340,12 @@ async function testFullBackAlleyEncounterCompletes(): Promise<void> {
             );
         }
 
-        assert.equal(mortis.destroyed, false, 'estimated damage finalized Mortis before the room cleared');
-        assert.equal(seelie.destroyed, false, 'estimated damage finalized Seelie before the room cleared');
+        assert.equal(mortis.destroyed, true, 'Mortis did not remain permanently dead after lethal damage');
+        assert.equal(seelie.destroyed, true, 'Seelie Ravager did not remain permanently dead after lethal damage');
         assert.equal(
             DungeonCompletionSystem.evaluate(scope).objectivesMet,
             false,
-            'estimated cumulative damage completed Back Alley early'
-        );
-
-        const deadStatePayload = (bossId: number): Buffer => (LevelHandler as any).buildEntityIncrementalUpdatePayload(
-            bossId,
-            0,
-            0,
-            0,
-            EntityState.DEAD,
-            { bLeft: false, bRunning: false, bJumping: false, bDropping: false, bBackpedal: false },
-            false,
-            0
-        );
-        LevelHandler.handleEntityIncrementalUpdate(client as never, deadStatePayload(mortis.id));
-        LevelHandler.handleEntityIncrementalUpdate(client as never, deadStatePayload(seelie.id));
-
-        assert.equal(mortis.destroyed, false, 'Mortis temporary down phase was treated as final death');
-        assert.equal(seelie.destroyed, false, 'Seelie temporary down phase was treated as final death');
-        assert.equal(
-            DungeonCompletionSystem.evaluate(scope).objectivesMet,
-            false,
-            'temporary individual boss states completed Back Alley early'
+            'individual boss deaths bypassed the authored room-clear gate'
         );
 
         const roomClear = new BitBuffer(false);
@@ -437,6 +420,12 @@ async function main(): Promise<void> {
     );
     testClientHealingCannotRestoreBossHealth('JC_Mission2', 'GreaterBoneGolem2');
     testClientHealingCannotRestoreBossHealth('JC_Mission2Hard', 'GreaterBoneGolem2Hard');
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2', 'GreaterBoneGolem2', 86_001);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2Hard', 'GreaterBoneGolem2Hard', 86_002);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2', 'GreaterBoneGolem', 86_003);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2Hard', 'GreaterBoneGolemHard', 86_004);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2', 'GreaterBoneGolem2', 86_005, true);
+    await testDamagedClientAuthorityBossDestroyIsFinal('JC_Mission2Hard', 'GreaterBoneGolem2Hard', 86_006, true);
     await testFullBackAlleyEncounterCompletes();
 
     console.log('back_alley_boss_health_regression: ok');
