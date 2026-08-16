@@ -6,6 +6,14 @@ All notable user-facing and operator-facing changes are documented here. Version
 
 No unreleased changes.
 
+## [1.26.2] - 2026-08-16
+
+### Verification portability
+
+- Made the Plague Battalion artifact verifier idempotent for both LF and CRLF Git checkouts instead of reporting 20 missing powers only on Windows.
+- Added cross-platform line-ending regression coverage and removed the now-proven stale Plague Battalion exception from the client-patch baseline.
+- The strict client gate now produces the same result on maintainer Windows machines and Linux release CI without weakening artifact verification.
+
 ## [1.26.1] - 2026-08-16
 
 ### Container reliability

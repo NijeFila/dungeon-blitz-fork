@@ -44,6 +44,7 @@ This creates or refreshes `test@theminesa.studio` with `MaxMage`, `MaxPaladin`, 
 | Port 8000 or 8080 is in use | Stop the previous server or configure another static/game port. |
 | Dependencies fail after an update | Delete only the affected `node_modules/.dungeon-blitz-lock.sha256` marker and rerun the launcher. |
 | A local update was stashed | Inspect `git stash list`, then restore the labelled launcher stash with `git stash pop`. |
+| FFDec reports a 247 MB heap or runs out of memory | Use 64-bit Java 21+ and set `JAVA_TOOL_OPTIONS=-Xms256m -Xmx4g` before running the maintainer-only client patch sweep. A 32-bit JVM cannot use the required heap. |
 
 ## Recent gameplay reliability work
 
@@ -87,7 +88,7 @@ npm run test:browser --prefix src/server
 npm run test:regression --prefix src/server
 ```
 
-Client verification and ordinary builds are read-only. Release CI provisions pinned FFDec 26.2.1 and treats unavailable verification tools, changed artifact hashes, expired patch exceptions, source mutation, or a second-build difference as failures. Regression tests have per-test timeouts, JUnit output, and optional sharding through `TEST_SHARD_TOTAL` and `TEST_SHARD_INDEX`.
+Client verification and ordinary builds are read-only. Release CI provisions pinned FFDec 26.2.1 on 64-bit Java, gives it a 2 GB heap, and treats unavailable verification tools, changed artifact hashes, expired patch exceptions, source mutation, or a second-build difference as failures. The verifier produces the same semantic result for LF and CRLF Git checkouts. For a local strict sweep, set `FFDEC_PATH`, use 64-bit Java 21+, and set `JAVA_TOOL_OPTIONS=-Xms256m -Xmx4g`; ordinary players do not need FFDec. Regression tests have per-test timeouts, JUnit output, and optional sharding through `TEST_SHARD_TOTAL` and `TEST_SHARD_INDEX`.
 
 ## Documentation
 

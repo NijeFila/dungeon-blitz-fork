@@ -55,6 +55,10 @@ const FIRST_ROR_POWER_ID = 7029;
  */
 const PLAGUE_EXPERTISE_MOD_ID = 1099;
 
+function sameXmlIgnoringLineEndings(left: string, right: string): boolean {
+  return left.replace(/\r\n/g, "\n") === right.replace(/\r\n/g, "\n");
+}
+
 function buffBlock(rank: number): string {
   return [
     `\t<BuffType BuffName="PlagueBattalion${rank}">`,
@@ -235,25 +239,28 @@ function repointPowerBuffLists(xml: string): { xml: string; changes: number } {
 export function patchPlayerPowerTypes(xml: string): { xml: string; changes: number } {
   let next = xml;
   let changes = 0;
+  const eol = xml.includes("\r\n") ? "\r\n" : "\n";
 
   // Drop any blocks a previous run wrote before re-inserting, so the generators above stay the
   // single source of truth and a changed block (the projectile art, say) actually converges
   // instead of being skipped as "already present".
   const stale = new RegExp(
-    `\\n?\\t<Power PowerName="PlagueBattalion(?:Melee|ROR)\\d+">[\\s\\S]*?<\\/Power>`,
+    `(?:\\r?\\n)?\\t<Power PowerName="PlagueBattalion(?:Melee|ROR)\\d+">[\\s\\S]*?<\\/Power>`,
     "g",
   );
   const withoutStale = next.replace(stale, "");
-  const inserts = RANKS.map((rank) => `${meleePowerBlock(rank)}\n${rangedPowerBlock(rank)}`).join("\n");
+  const inserts = RANKS.map((rank) => `${meleePowerBlock(rank)}\n${rangedPowerBlock(rank)}`)
+    .join("\n")
+    .replace(/\n/g, eol);
   const closing = "</PlayerPowerTypes>";
   if (!withoutStale.includes(closing)) {
     throw new Error("PlayerPowerTypes.xml has no closing tag to insert before.");
   }
   const rebuilt = withoutStale.replace(closing, `${inserts}\n${closing}`);
-  if (rebuilt !== next) {
+  if (!sameXmlIgnoringLineEndings(rebuilt, next)) {
     changes += RANKS.length * 2;
+    next = rebuilt;
   }
-  next = rebuilt;
 
   const repointed = repointPowerBuffLists(next);
   return { xml: repointed.xml, changes: changes + repointed.changes };
@@ -287,6 +294,7 @@ function capPlagueStacks(xml: string): { xml: string; changes: number } {
 export function patchPlayerBuffTypes(xml: string): { xml: string; changes: number } {
   let next = xml;
   let changes = 0;
+  const eol = xml.includes("\r\n") ? "\r\n" : "\n";
 
   const capped = capPlagueStacks(next);
   next = capped.xml;
@@ -294,7 +302,7 @@ export function patchPlayerBuffTypes(xml: string): { xml: string; changes: numbe
 
   // Same rewrite-rather-than-skip rule as the powers, so a changed block converges.
   const staleBuffs = new RegExp(
-    `\\n?\\t<BuffType BuffName="PlagueBattalion(?:Minion)?\\d+">[\\s\\S]*?<\\/BuffType>`,
+    `(?:\\r?\\n)?\\t<BuffType BuffName="PlagueBattalion(?:Minion)?\\d+">[\\s\\S]*?<\\/BuffType>`,
     "g",
   );
   const withoutStaleBuffs = next.replace(staleBuffs, "");
@@ -302,12 +310,14 @@ export function patchPlayerBuffTypes(xml: string): { xml: string; changes: numbe
   if (!withoutStaleBuffs.includes(buffClosing)) {
     throw new Error("PlayerBuffTypes.xml has no closing tag to insert before.");
   }
-  const buffBlocks = [...RANKS.map(buffBlock), ...RANKS.map(minionBuffBlock)].join("\n");
+  const buffBlocks = [...RANKS.map(buffBlock), ...RANKS.map(minionBuffBlock)]
+    .join("\n")
+    .replace(/\n/g, eol);
   const rebuiltBuffs = withoutStaleBuffs.replace(buffClosing, `${buffBlocks}\n${buffClosing}`);
-  if (rebuiltBuffs !== next) {
+  if (!sameXmlIgnoringLineEndings(rebuiltBuffs, next)) {
     changes += RANKS.length * 2;
+    next = rebuiltBuffs;
   }
-  next = rebuiltBuffs;
 
   // The rank-0 buff keeps its own entry but stops being a dead end.
   next = next.replace(

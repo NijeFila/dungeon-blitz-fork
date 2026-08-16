@@ -4,6 +4,10 @@
 import { strict as assert } from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+    patchPlayerBuffTypes,
+    patchPlayerPowerTypes,
+} from '../scripts/patch_gameswz_plague_battalion_overrides';
 
 const XML_DIR = path.resolve(__dirname, '../../client/content/xml');
 const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -22,6 +26,16 @@ function main(): void {
     const powers = fs.readFileSync(path.join(XML_DIR, 'PlayerPowerTypes.xml'), 'utf8');
     const buffs = fs.readFileSync(path.join(XML_DIR, 'PlayerBuffTypes.xml'), 'utf8');
     const powerNames = new Set([...powers.matchAll(/<Power PowerName="([^"]*)">/g)].map((m) => m[1]));
+
+    // Git may materialize tracked XML with LF (CI/macOS) or CRLF (Windows). Verification must
+    // compare authored XML semantics, not mistake checkout line endings for 20 missing powers.
+    for (const [label, eolPowers, eolBuffs] of [
+        ['LF', powers.replace(/\r\n/g, '\n'), buffs.replace(/\r\n/g, '\n')],
+        ['CRLF', powers.replace(/\r?\n/g, '\r\n'), buffs.replace(/\r?\n/g, '\r\n')],
+    ] as const) {
+        assert.equal(patchPlayerPowerTypes(eolPowers).changes, 0, `${label} powers must verify idempotently`);
+        assert.equal(patchPlayerBuffTypes(eolBuffs).changes, 0, `${label} buffs must verify idempotently`);
+    }
 
     for (const rank of RANKS) {
         const casterBuff = block(buffs, new RegExp(`<BuffType BuffName="PlagueBattalion${rank}">[\\s\\S]*?</BuffType>`));

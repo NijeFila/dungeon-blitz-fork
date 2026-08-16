@@ -153,12 +153,6 @@
       "expires": "2027-02-16"
     },
     {
-      "name": "patch_gameswz_plague_battalion_overrides.ts",
-      "owner": "client-maintainers",
-      "rationale": "Strict FFDec 26.2.1 verification exposed a pre-existing imported Game.swz discrepancy; reapplication requires focused Plague Battalion client validation.",
-      "expires": "2026-10-16"
-    },
-    {
       "name": "patch-dungeonblitz-bitmap-cache-guard.js",
       "owner": "client-maintainers",
       "rationale": "Strict FFDec 26.2.1 verification exposed a pre-existing Game source discrepancy; reapplication requires render-loop crash validation.",
