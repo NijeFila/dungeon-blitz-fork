@@ -2,6 +2,28 @@
 
 This plan implements the findings in [AUDIT.md](AUDIT.md). It is ordered by risk reduction and dependency, not by convenience. Each work item has an owner role, evidence gate, rollout, and rollback expectation. No item is complete merely because code was merged.
 
+## Implementation status after 1.25.0
+
+This table records implementation status, not merely whether code changed. “Partial” means at least one acceptance criterion remains unproven.
+
+| Finding | Status | 1.25 evidence / remaining gate |
+| --- | --- | --- |
+| `TEST-01` | Implemented | Back Alley normal/hard focused sequence and the complete 100-program regression suite pass. |
+| `DATA-01` | Partial | Serialized atomic replacement, validation, backup recovery, concurrency, and injected-failure coverage are present. The audit's 100-operation stress target and recoverable account-plus-save journal remain open. |
+| `DATA-02` | Implemented at repository tip | Runtime authority is ignored; only the documented synthetic fixture is tracked; existing local data is preserved. Historical purge remains conditional on confirmed real identifiers. |
+| `REL-01` | Partial | Release is explicit and depends on the reusable build/test/patch/audit/artifact quality workflow. Deliberate-failure exercises and repository branch-protection enforcement remain to be proven on GitHub. |
+| `STATE-01` | Partial | Central idempotent scope disposal and focused tests exist; the requested thousands-of-instance heap soak remains unrun. |
+| `OPS-02` / `OPS-03` | Partial | Non-root image, read-only deployment contract, component readiness, accurate ports, debug guard, graceful stop, and corrected build context are present. A clean-host container build/run smoke test remains unproven. |
+| `DEP-01` | Implemented | Both manifests are monitored; the audited advisory is resolved; CI distinguishes production audit policy. |
+| `WEB-01`–`WEB-09` | Partial | Stable keyed rendering, drafts, confirmations, pending guards, contrast/type/targets, navigation, full OAuth pages, offline fonts, viewport, fallback, and autocomplete are present. The browser/assistive-technology acceptance checks remain unautomated. |
+| `LAUNCH-01` / `LAUNCH-02` | Partial | Readiness-gated Windows FlashBrowser launch and lockfile-hash dependency reconciliation are shared across launchers. Clean Windows/macOS end-to-end launcher tests remain unrun. |
+| `DOC-01` | Implemented | README links tracked guides; security, hosting, admin, recovery, rollback, audit, plan, and changelog are documented. |
+| `AUTH-01` | Partial | Back Alley terminal-death authority is corrected; the canonical lifecycle has not been migrated project-wide with shadow telemetry and rollback flags. |
+| `CLIENT-01` | Partial | Verification is read-only and strict CI provisions FFDec; the known baseline, immutable originals, patch manifest, and deterministic rebuild hashes remain open. |
+| `TEST-02` | Partial | Timeouts, sharding, JUnit, and admin UI contracts exist; coverage, lint/format, and real browser automation remain open. |
+| `OPS-01` | Partial | Procedures are documented; scheduled backups and a recorded restore/rollback drill are operator work. |
+| `ARCH-01` / `ARCH-02` | Open | Handler decomposition, typed protocol adapters, and structured/redacted logging require incremental releases and were not represented as completed. |
+
 ## Operating rules
 
 1. Freeze automatic releases until Phase 1 gates are active.

@@ -52,6 +52,14 @@ This creates or refreshes `test@theminesa.studio` with `MaxMage`, `MaxPaladin`, 
 - The Prodigal Son (`JC_Mission3`): Prince Friedrich Hocke recovers his authored wake-up trigger if a room transition skips it, preventing the actor from remaining stuck.
 - Mammoth Idols no longer route purchases to the retired payment page.
 
+## Audit remediation status
+
+Release 1.25 addresses the audit's immediate release blockers and many concrete reliability, persistence, operations, launcher, admin, accessibility, dependency, and documentation findings. It is **not 100% of the audit program**.
+
+Completed implementation includes Back Alley normal/hard terminal boss handling, atomic JSON account persistence and recovery, removal of tracked runtime authority, explicit quality-gated releases, central dungeon-scope disposal, graceful listener/AI shutdown, component readiness, a non-root container contract, dependency monitoring/advisory resolution, safer admin state/actions, launcher reliability, and the browser/documentation corrections.
+
+Still open or partial: project-wide canonical encounter authority beyond Back Alley, decomposition of the monolithic handlers, typed packet boundaries, structured/redacted logging, elimination of the known client-patch baseline, reproducible client builds from immutable originals, coverage/lint/real-browser gates, and long-running scope/backup/restore drills. The exact evidence and acceptance criteria are tracked in [AUDIT-PLAN.md](AUDIT-PLAN.md), and the complete 1.25 change record is in [CHANGELOG.md](CHANGELOG.md).
+
 ## Administration
 
 The optional admin console is loopback-only and requires a shared secret:
