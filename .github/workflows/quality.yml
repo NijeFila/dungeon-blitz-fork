@@ -111,6 +111,8 @@ jobs:
         run: |
           mkdir -p /tmp/db-saves
           printf '[]\n' > /tmp/db-accounts.json
+          chmod 666 /tmp/db-accounts.json
+          chmod 777 /tmp/db-saves
           docker run -d --name dungeon-blitz-audit --read-only --tmpfs /tmp:rw,noexec,nosuid \
             -p 18000:8000 -p 18080:8080 \
             --mount type=bind,src=/tmp/db-accounts.json,dst=/opt/games/dungeon-blitz-r/src/server/data/Accounts.json \

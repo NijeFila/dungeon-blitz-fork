@@ -6,6 +6,14 @@ All notable user-facing and operator-facing changes are documented here. Version
 
 No unreleased changes.
 
+## [1.26.1] - 2026-08-16
+
+### Container reliability
+
+- Made the production image explicitly bind static HTTP to port 8000 even though multiplayer mode otherwise defaults to port 80.
+- Aligned the image healthcheck with port 8000 and made the clean-host smoke mounts writable by the unprivileged runtime user.
+- Confirmed the Windows and macOS launcher smoke jobs already pass on the 1.26 release workflow.
+
 ## [1.26.0] - 2026-08-16
 
 Release 1.26.0 completes the concrete remediation deliverables from the project-wide audit and turns them into repeatable release gates. It also replaces Back Alley Deals' HP-estimate workaround with an encounter lifecycle that matches the client/server relationship.

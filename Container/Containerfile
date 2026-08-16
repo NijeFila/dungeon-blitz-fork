@@ -14,7 +14,8 @@ EXPOSE 8000/tcp
 EXPOSE 8080/tcp
 EXPOSE 843/tcp
 
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    STATIC_PORT=8000
 WORKDIR /opt/games/dungeon-blitz-r/src/server
 
 COPY src/server/package.json src/server/package-lock.json ./
@@ -31,7 +32,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh && \
     mkdir -p data/saves && chown -R node:node /opt/games/dungeon-blitz-r
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:8000/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 
 USER node
 

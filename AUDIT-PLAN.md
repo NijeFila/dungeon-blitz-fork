@@ -2,7 +2,7 @@
 
 This plan implements the findings in [AUDIT.md](AUDIT.md). It is ordered by risk reduction and dependency, not by convenience. Each work item has an owner role, evidence gate, rollout, and rollback expectation. No item is complete merely because code was merged.
 
-## Implementation status for 1.26.0
+## Implementation status for 1.26.x
 
 This table records implementation and its evidence gate, not merely whether code changed. GitHub-hosted jobs are considered operationally proven only after the pushed workflow completes successfully.
 
@@ -26,7 +26,7 @@ This table records implementation and its evidence gate, not merely whether code
 
 ### Completion interpretation
 
-All concrete audit defects have an implementation, automated gate, operator control, or explicitly documented provenance boundary in 1.26.0. “Implemented” does not mean the legacy server has been rewritten: the original plan explicitly requires incremental dungeon migration and handler extraction. The two continuing programs are expansion of canonical authority beyond the Back Alley pilot and reduction below the frozen legacy architecture budgets.
+All concrete audit defects have an implementation, automated gate, operator control, or explicitly documented provenance boundary in 1.26.x. “Implemented” does not mean the legacy server has been rewritten: the original plan explicitly requires incremental dungeon migration and handler extraction. The two continuing programs are expansion of canonical authority beyond the Back Alley pilot and reduction below the frozen legacy architecture budgets.
 
 ## Operating rules
 
